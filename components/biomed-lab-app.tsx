@@ -178,6 +178,12 @@ export function BiomedLabApp() {
     setSelectedId(item.id);
     setActiveHotspotId(item.hotspots[0].id);
     setActivePanel("overview");
+    window.requestAnimationFrame(() => {
+      document.getElementById("equipos")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
   };
 
   const recordAction = (action: string) => {

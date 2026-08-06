@@ -170,6 +170,27 @@ def panel(name, loc, size, label, material=None):
     return screen
 
 
+def front_panel(name, loc, size, label, material=None):
+    screen = cube(name, loc, (size[0], 0.028, size[1]), material or MATS["screen"], bevel=0.02)
+    front_label(
+        label,
+        (loc[0] - size[0] * 0.35, loc[1] - 0.026, loc[2] + size[1] * 0.18),
+        0.1,
+        material=MATS["screen_white"],
+    )
+    monitor_trace_front(
+        f"{name} waveform",
+        loc[0] - size[0] * 0.34,
+        loc[2] - size[1] * 0.1,
+        loc[1] - 0.03,
+        size[0] * 0.68,
+        size[1] * 0.08,
+        MATS["screen_cyan"] if material else MATS["screen_green"],
+        beats=2,
+    )
+    return screen
+
+
 def add_label(text, loc, size=0.11, align="LEFT", material=None):
     bpy.ops.object.text_add(location=loc, rotation=(0, 0, 0))
     obj = bpy.context.object
@@ -331,70 +352,113 @@ def patient_monitor():
 
 
 def infusion_pump():
-    cube("pump body", (-0.35, 0, 0), (1.4, 1.9, 0.52), MATS["shell"], bevel=0.11)
-    panel("flow screen", (-0.64, 0.46, 0.285), (0.54, 0.48), "125")
-    cube("door frame", (0.18, 0.02, 0.31), (0.68, 1.26, 0.08), MATS["dark"], bevel=0.04)
-    cyl("upper roller", (0.18, 0.34, 0.38), 0.16, 0.82, MATS["steel"], rotation=(0, math.pi / 2, 0))
-    cyl("lower roller", (0.18, -0.27, 0.38), 0.13, 0.8, MATS["steel"], rotation=(0, math.pi / 2, 0))
-    cable("transparent infusion set", [(-1.18, -0.25, 0.32), (-0.28, 0.05, 0.48), (1.18, -0.03, 0.5), (1.86, 0.28, 0.18)], MATS["teal"], 0.018)
-    cyl("syringe barrel", (1.16, -0.02, 0.46), 0.14, 0.58, MATS["glass"], rotation=(math.pi / 2, 0, 0))
-    cube("start button", (-0.64, -0.48, 0.3), (0.28, 0.14, 0.04), MATS["teal"], bevel=0.03)
-    cube("stop button", (-0.28, -0.48, 0.3), (0.28, 0.14, 0.04), MATS["red"], bevel=0.03)
+    front_y = -0.42
+    cube("pump upright body", (-0.34, 0.0, 0.0), (1.18, 0.66, 1.86), MATS["shell"], bevel=0.11)
+    cube("rear battery housing", (-0.34, 0.32, -0.04), (1.02, 0.22, 1.55), MATS["soft_gray"], bevel=0.06)
+    cube("top carry handle", (-0.34, 0.0, 1.03), (0.74, 0.56, 0.16), MATS["bezel"], bevel=0.06)
+    front_panel("flow screen", (-0.68, front_y, 0.48), (0.48, 0.36), "125")
+    cube("cassette dark well", (0.1, front_y - 0.015, 0.08), (0.58, 0.04, 1.08), MATS["dark"], bevel=0.04)
+    cube("transparent pump door", (0.1, front_y - 0.04, 0.08), (0.48, 0.035, 0.92), MATS["glass"], bevel=0.035)
+    cyl("upper roller", (0.1, front_y - 0.06, 0.34), 0.13, 0.56, MATS["steel"], rotation=(math.pi / 2, 0, math.pi / 2))
+    cyl("lower roller", (0.1, front_y - 0.06, -0.24), 0.11, 0.54, MATS["steel"], rotation=(math.pi / 2, 0, math.pi / 2))
+    cube("line inlet clamp", (-0.22, front_y - 0.06, 0.66), (0.12, 0.07, 0.18), MATS["blue"], bevel=0.025)
+    cube("line outlet clamp", (0.42, front_y - 0.06, -0.58), (0.12, 0.07, 0.18), MATS["teal"], bevel=0.025)
+    cable("infusion line through pump", [(-0.7, front_y - 0.08, 0.76), (-0.2, front_y - 0.12, 0.56), (0.18, front_y - 0.12, 0.02), (0.46, front_y - 0.12, -0.62), (0.98, front_y - 0.08, -0.48)], MATS["teal"], 0.017)
+    cyl("syringe barrel", (0.88, front_y - 0.11, 0.02), 0.105, 0.5, MATS["glass"], rotation=(0, math.pi / 2, 0))
+    cyl("syringe plunger", (1.18, front_y - 0.11, 0.02), 0.055, 0.18, MATS["steel"], rotation=(0, math.pi / 2, 0))
+    cube("syringe cradle", (0.88, front_y - 0.06, -0.16), (0.54, 0.08, 0.12), MATS["bezel"], bevel=0.035)
+    cube("start button", (-0.64, front_y - 0.035, -0.5), (0.24, 0.035, 0.12), MATS["teal"], bevel=0.03)
+    cube("stop button", (-0.34, front_y - 0.035, -0.5), (0.24, 0.035, 0.12), MATS["red"], bevel=0.03)
+    cube("left rubber foot", (-0.74, -0.16, -1.02), (0.32, 0.18, 0.08), MATS["rubber"], bevel=0.025)
+    cube("right rubber foot", (0.06, -0.16, -1.02), (0.32, 0.18, 0.08), MATS["rubber"], bevel=0.025)
 
 
 def defibrillator():
-    cube("defib body", (0, -0.06, 0), (2.15, 1.04, 0.56), MATS["shell"], bevel=0.11)
-    torus("integrated handle", (0, 0.68, 0.0), 0.72, 0.055, MATS["steel"], rotation=(0, math.pi / 2, 0))
-    panel("sync display", (-0.54, 0.18, 0.31), (0.84, 0.42), "SYNC")
-    cube("energy selector", (0.34, 0.24, 0.32), (0.42, 0.2, 0.05), MATS["amber"], bevel=0.04)
-    cube("charge key", (0.86, 0.25, 0.32), (0.28, 0.18, 0.05), MATS["blue"], bevel=0.035)
-    cube("shock key", (0.86, -0.02, 0.32), (0.28, 0.18, 0.05), MATS["red"], bevel=0.035)
-    cube("paddle left", (1.32, 0.06, 0.2), (0.42, 0.34, 0.16), MATS["dark"], bevel=0.04)
-    cube("paddle right", (1.32, -0.42, 0.12), (0.42, 0.34, 0.16), MATS["dark"], bevel=0.04)
-    cable("paddle cable", [(0.94, -0.1, 0.18), (1.32, 0.42, 0.28), (1.67, -0.42, 0.12)], MATS["rubber"], 0.025)
+    front_y = -0.55
+    cube("defib body", (0, -0.02, 0), (2.18, 1.0, 0.72), MATS["shell"], bevel=0.11)
+    cube("front rubber bumper", (0, front_y - 0.03, 0), (2.02, 0.08, 0.58), MATS["soft_gray"], bevel=0.05)
+    torus("integrated handle", (0, -0.02, 0.56), 0.72, 0.055, MATS["steel"], rotation=(math.pi / 2, 0, 0))
+    cube("handle left post", (-0.72, -0.02, 0.5), (0.16, 0.2, 0.34), MATS["bezel"], bevel=0.045)
+    cube("handle right post", (0.72, -0.02, 0.5), (0.16, 0.2, 0.34), MATS["bezel"], bevel=0.045)
+    front_panel("sync display", (-0.58, front_y - 0.04, 0.12), (0.78, 0.32), "SYNC")
+    cube("energy selector", (0.32, front_y - 0.05, 0.16), (0.38, 0.05, 0.18), MATS["amber"], bevel=0.04)
+    cube("charge key", (0.84, front_y - 0.05, 0.22), (0.24, 0.05, 0.14), MATS["blue"], bevel=0.035)
+    cube("shock key", (0.84, front_y - 0.05, -0.02), (0.24, 0.05, 0.14), MATS["red"], bevel=0.035)
+    cube("paddle dock left", (1.02, -0.06, -0.18), (0.5, 0.4, 0.08), MATS["bezel"], bevel=0.035)
+    cube("paddle dock right", (1.02, -0.06, -0.42), (0.5, 0.4, 0.08), MATS["bezel"], bevel=0.035)
+    cube("paddle left", (1.08, -0.2, -0.08), (0.42, 0.24, 0.16), MATS["dark"], bevel=0.04)
+    cube("paddle right", (1.08, -0.2, -0.36), (0.42, 0.24, 0.16), MATS["dark"], bevel=0.04)
+    cable("paddle cable", [(0.64, front_y - 0.06, -0.18), (1.02, -0.34, 0.0), (1.1, -0.28, -0.36)], MATS["rubber"], 0.025)
+    cube("printer slot", (-0.34, front_y - 0.05, -0.24), (0.58, 0.05, 0.06), MATS["dark"], bevel=0.012)
 
 
 def ventilator():
-    cube("ventilator body", (-0.24, 0.14, 0), (1.75, 1.36, 0.56), MATS["shell"], bevel=0.11)
-    panel("vent display", (-0.62, 0.45, 0.305), (0.72, 0.42), "FLOW")
-    cyl("flow turbine", (0.35, 0.15, 0.34), 0.22, 0.62, MATS["steel"], rotation=(0, math.pi / 2, 0))
-    cyl("exp valve", (0.38, -0.28, 0.34), 0.16, 0.58, MATS["teal"], rotation=(0, math.pi / 2, 0))
-    cable("inspiratory limb", [(0.78, 0.18, 0.32), (1.34, 0.45, 0.48), (1.88, 0.08, 0.2)], MATS["blue"], 0.04)
-    cable("expiratory limb", [(0.78, -0.22, 0.32), (1.42, -0.56, 0.22), (1.9, -0.18, 0.08)], MATS["teal"], 0.04)
-    cube("rolling base", (-0.24, -0.92, -0.06), (1.28, 0.16, 0.2), MATS["steel"], bevel=0.05)
-    cyl("wheel left", (-0.8, -1.02, 0.12), 0.18, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
-    cyl("wheel right", (0.32, -1.02, 0.12), 0.18, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
+    front_y = -0.46
+    cube("ventilator body", (-0.24, 0.0, 0.12), (1.62, 0.72, 1.18), MATS["shell"], bevel=0.11)
+    cube("rear gas module", (-1.0, 0.28, 0.0), (0.2, 0.22, 0.94), MATS["soft_gray"], bevel=0.05)
+    front_panel("vent display", (-0.58, front_y - 0.03, 0.38), (0.68, 0.34), "FLOW")
+    cyl("flow turbine", (0.34, front_y - 0.05, 0.3), 0.17, 0.46, MATS["steel"], rotation=(math.pi / 2, 0, math.pi / 2))
+    cyl("exp valve", (0.34, front_y - 0.05, -0.08), 0.13, 0.42, MATS["teal"], rotation=(math.pi / 2, 0, math.pi / 2))
+    cyl("inspiratory outlet coupler", (0.74, front_y - 0.08, 0.28), 0.1, 0.14, MATS["blue"], rotation=(math.pi / 2, 0, 0))
+    cyl("expiratory inlet coupler", (0.74, front_y - 0.08, -0.08), 0.1, 0.14, MATS["teal"], rotation=(math.pi / 2, 0, 0))
+    cable("inspiratory limb", [(0.74, front_y - 0.1, 0.28), (1.12, front_y - 0.3, 0.42), (1.52, front_y - 0.18, 0.2), (1.78, front_y - 0.08, 0.02)], MATS["blue"], 0.04)
+    cable("expiratory limb", [(0.74, front_y - 0.1, -0.08), (1.16, front_y - 0.32, -0.22), (1.52, front_y - 0.18, -0.12), (1.78, front_y - 0.08, 0.02)], MATS["teal"], 0.04)
+    cube("patient y piece", (1.86, front_y - 0.06, 0.02), (0.22, 0.16, 0.12), MATS["bezel"], bevel=0.03)
+    cube("rolling base", (-0.24, -0.02, -0.78), (1.28, 0.58, 0.16), MATS["steel"], bevel=0.05)
+    cube("cart mast", (-0.86, 0.0, -0.34), (0.1, 0.1, 0.78), MATS["steel"], bevel=0.025)
+    cyl("wheel left", (-0.8, -0.24, -0.94), 0.14, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
+    cyl("wheel right", (0.32, -0.24, -0.94), 0.14, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
 
 
 def autoclave():
-    cyl("pressure chamber", (0.04, 0.02, 0), 0.76, 1.8, MATS["shell"], rotation=(0, math.pi / 2, 0))
-    cyl("front door", (-0.88, 0.02, 0), 0.66, 0.08, MATS["steel"], rotation=(0, math.pi / 2, 0))
-    torus("door gasket", (-0.93, 0.02, 0), 0.57, 0.025, MATS["rubber"], rotation=(0, math.pi / 2, 0))
-    cyl("gauge", (0.96, 0.52, 0.35), 0.16, 0.055, MATS["screen_blue"], rotation=(math.pi / 2, 0, 0))
-    panel("cycle panel", (0.96, 0.05, 0.5), (0.5, 0.28), "121C", MATS["screen_blue"])
-    cube("drain rail", (0.1, -0.75, 0), (1.25, 0.13, 0.18), MATS["steel"], bevel=0.04)
-    cable("drain tube", [(0.52, -0.72, 0.34), (0.96, -0.86, 0.22), (1.2, -0.68, 0.05)], MATS["teal"], 0.027)
+    cube("autoclave cabinet base", (0.12, 0.02, -0.56), (2.08, 0.9, 0.42), MATS["soft_gray"], bevel=0.08)
+    cyl("pressure chamber", (0.0, 0.0, 0.08), 0.64, 1.78, MATS["shell"], rotation=(0, math.pi / 2, 0))
+    cyl("front door", (-0.9, -0.02, 0.08), 0.56, 0.08, MATS["steel"], rotation=(0, math.pi / 2, 0))
+    torus("door gasket", (-0.96, -0.02, 0.08), 0.49, 0.025, MATS["rubber"], rotation=(0, math.pi / 2, 0))
+    cube("door latch handle", (-0.98, -0.5, 0.18), (0.08, 0.08, 0.42), MATS["dark"], bevel=0.02)
+    cyl("door hinge upper", (-0.92, 0.54, 0.28), 0.05, 0.22, MATS["steel"], rotation=(math.pi / 2, 0, 0))
+    cyl("door hinge lower", (-0.92, 0.54, -0.12), 0.05, 0.22, MATS["steel"], rotation=(math.pi / 2, 0, 0))
+    cyl("gauge", (0.92, -0.48, 0.5), 0.14, 0.055, MATS["screen_blue"], rotation=(math.pi / 2, 0, 0))
+    front_panel("cycle panel", (0.92, -0.48, 0.12), (0.46, 0.24), "121C", MATS["screen_blue"])
+    cube("drain rail", (0.1, -0.46, -0.52), (1.25, 0.12, 0.14), MATS["steel"], bevel=0.04)
+    cable("drain tube", [(0.52, -0.5, -0.2), (0.96, -0.66, -0.34), (1.2, -0.54, -0.58)], MATS["teal"], 0.027)
+    cube("left autoclave foot", (-0.62, -0.24, -0.84), (0.34, 0.18, 0.12), MATS["rubber"], bevel=0.03)
+    cube("right autoclave foot", (0.82, -0.24, -0.84), (0.34, 0.18, 0.12), MATS["rubber"], bevel=0.03)
 
 
 def incubator():
-    cube("base warmer", (0, -0.42, 0), (2.35, 0.42, 0.96), MATS["shell"], bevel=0.09)
-    cube("polycarbonate canopy", (0, 0.18, 0.04), (2.08, 0.82, 0.84), MATS["glass"], bevel=0.12)
-    panel("temperature console", (0.9, -0.16, 0.58), (0.72, 0.36), "TEMP", MATS["screen_blue"])
-    cyl("skin probe", (-0.86, -0.1, 0.62), 0.09, 0.34, MATS["teal"], rotation=(math.pi / 2, 0, 0))
-    cable("probe cable", [(-0.88, -0.08, 0.62), (-1.28, -0.22, 0.36), (-1.48, -0.54, 0.16)], MATS["teal"], 0.016)
-    cyl("heater element", (0.52, -0.72, 0.2), 0.14, 0.7, MATS["amber"], rotation=(0, math.pi / 2, 0))
-    cube("mattress", (-0.1, -0.18, 0.26), (1.36, 0.16, 0.46), MATS["teal"], bevel=0.04)
+    front_y = -0.5
+    cube("base warmer", (0, -0.02, -0.36), (2.35, 0.78, 0.42), MATS["shell"], bevel=0.09)
+    cube("integrated equipment drawer", (0, front_y, -0.5), (2.1, 0.08, 0.24), MATS["soft_gray"], bevel=0.05)
+    cube("polycarbonate canopy", (0, -0.02, 0.22), (2.08, 0.76, 0.86), MATS["glass"], bevel=0.12)
+    cube("canopy top rail", (0, -0.02, 0.68), (1.82, 0.68, 0.08), MATS["bezel"], bevel=0.035)
+    cube("left access port", (-0.72, front_y - 0.035, 0.28), (0.28, 0.05, 0.28), MATS["bezel"], bevel=0.04)
+    cube("right access port", (0.0, front_y - 0.035, 0.28), (0.28, 0.05, 0.28), MATS["bezel"], bevel=0.04)
+    front_panel("temperature console", (0.9, front_y - 0.04, -0.18), (0.58, 0.28), "TEMP", MATS["screen_blue"])
+    cyl("skin probe", (-0.86, front_y - 0.06, 0.24), 0.07, 0.26, MATS["teal"], rotation=(math.pi / 2, 0, 0))
+    cable("probe cable", [(-0.88, front_y - 0.06, 0.24), (-1.22, front_y - 0.22, 0.05), (-1.42, front_y - 0.12, -0.24)], MATS["teal"], 0.016)
+    cyl("heater element", (0.52, -0.2, -0.28), 0.12, 0.62, MATS["amber"], rotation=(0, math.pi / 2, 0))
+    cube("mattress", (-0.1, -0.18, 0.0), (1.36, 0.42, 0.12), MATS["teal"], bevel=0.04)
+    cube("cart crossbar", (0, -0.02, -0.88), (1.92, 0.1, 0.12), MATS["steel"], bevel=0.025)
+    cyl("incubator caster left", (-0.78, -0.18, -1.02), 0.11, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
+    cyl("incubator caster right", (0.78, -0.18, -1.02), 0.11, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
 
 
 def electrosurgery():
-    cube("esu body", (-0.18, 0.04, 0), (2.02, 1.04, 0.56), MATS["shell"], bevel=0.11)
-    panel("esu display", (-0.76, 0.3, 0.31), (0.7, 0.32), "CUT", MATS["screen_blue"])
-    cyl("cut output", (0.14, 0.32, 0.32), 0.1, 0.08, MATS["blue"], rotation=(math.pi / 2, 0, 0))
-    cyl("coag output", (0.48, 0.32, 0.32), 0.1, 0.08, MATS["amber"], rotation=(math.pi / 2, 0, 0))
-    cyl("return port", (0.92, -0.2, 0.32), 0.072, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
-    cable("active pencil cable", [(-1.08, -0.36, 0.34), (-1.66, -0.18, 0.22), (-2.0, -0.5, 0.06)], MATS["rubber"], 0.023)
-    cable("return pad cable", [(1.0, -0.2, 0.34), (1.48, -0.08, 0.18), (1.8, -0.34, 0.04)], MATS["teal"], 0.023)
-    cube("foot pedal", (0.62, -0.74, 0.02), (0.46, 0.14, 0.32), MATS["dark"], bevel=0.04)
+    front_y = -0.48
+    cube("esu body", (-0.18, 0.0, 0), (2.02, 0.82, 0.58), MATS["shell"], bevel=0.11)
+    cube("esu front fascia", (-0.18, front_y - 0.02, 0.0), (1.86, 0.05, 0.46), MATS["bezel"], bevel=0.055)
+    front_panel("esu display", (-0.76, front_y - 0.04, 0.12), (0.62, 0.24), "CUT", MATS["screen_blue"])
+    cyl("cut output", (0.14, front_y - 0.06, 0.12), 0.08, 0.08, MATS["blue"], rotation=(math.pi / 2, 0, 0))
+    cyl("coag output", (0.48, front_y - 0.06, 0.12), 0.08, 0.08, MATS["amber"], rotation=(math.pi / 2, 0, 0))
+    cyl("return port", (0.92, front_y - 0.06, -0.12), 0.062, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
+    cube("mode knob", (-0.18, front_y - 0.05, -0.18), (0.16, 0.05, 0.16), MATS["amber"], bevel=0.03)
+    cable("active pencil cable", [(-0.96, front_y - 0.06, -0.1), (-1.36, front_y - 0.22, -0.12), (-1.66, front_y - 0.16, -0.32)], MATS["rubber"], 0.023)
+    cyl("active pencil handpiece", (-1.78, front_y - 0.18, -0.34), 0.045, 0.38, MATS["dark"], rotation=(0, math.pi / 2, 0))
+    cable("return pad cable", [(0.92, front_y - 0.06, -0.12), (1.28, front_y - 0.18, -0.2), (1.52, front_y - 0.12, -0.36)], MATS["teal"], 0.023)
+    cube("return electrode pad", (1.68, front_y - 0.12, -0.38), (0.34, 0.18, 0.05), MATS["teal"], bevel=0.03)
+    cube("foot pedal", (0.62, -0.28, -0.56), (0.46, 0.24, 0.12), MATS["dark"], bevel=0.04)
+    cable("foot pedal cable", [(0.54, -0.28, -0.5), (0.26, -0.36, -0.26), (0.12, front_y - 0.06, -0.1)], MATS["rubber"], 0.018)
 
 
 MODELS = {

@@ -15,6 +15,61 @@ interface DeviceSceneProps {
 
 type HotspotMesh = THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>;
 
+const importedModelPoses: Partial<
+  Record<
+    EquipmentItem["id"],
+    {
+      rotationX: number;
+      rotationY: number;
+      scale: number;
+      position: [number, number, number];
+    }
+  >
+> = {
+  "patient-monitor": {
+    rotationX: -0.04,
+    rotationY: -0.28,
+    scale: 2.24,
+    position: [0.04, 0.34, 0],
+  },
+  "infusion-pump": {
+    rotationX: -0.05,
+    rotationY: 0.18,
+    scale: 2.25,
+    position: [0.08, 0.34, 0],
+  },
+  defibrillator: {
+    rotationX: -0.06,
+    rotationY: -0.2,
+    scale: 2.34,
+    position: [0.02, 0.34, 0],
+  },
+  ventilator: {
+    rotationX: -0.06,
+    rotationY: -0.18,
+    scale: 2.36,
+    position: [0.02, 0.34, 0],
+  },
+  autoclave: {
+    rotationX: -0.07,
+    rotationY: -0.26,
+    scale: 2.32,
+    position: [0.02, 0.32, 0],
+  },
+  "neonatal-incubator": {
+    rotationX: -0.05,
+    rotationY: -0.24,
+    scale: 2.48,
+    position: [0.04, 0.32, 0],
+  },
+  electrosurgery: {
+    rotationX: -0.05,
+    rotationY: -0.18,
+    scale: 3.05,
+    position: [0.04, 0.34, 0],
+  },
+};
+
 export function DeviceScene({
   equipment,
   layerMode,
@@ -287,15 +342,16 @@ function normalizeImportedModel(group: THREE.Group, equipmentId?: EquipmentItem[
 
   group.position.sub(center);
   const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
-  group.scale.setScalar(2.35 / maxAxis);
+  const pose = equipmentId ? importedModelPoses[equipmentId] : undefined;
+  group.scale.setScalar((pose?.scale ?? 2.22) / maxAxis);
   group.rotation.x = -0.08;
   group.rotation.y = 0.12;
-  group.position.set(0.16, 0.42, 0);
+  group.position.set(0.08, 0.34, 0);
 
-  if (equipmentId === "patient-monitor") {
-    group.rotation.x = -0.04;
-    group.rotation.y = -0.34;
-    group.position.set(0.1, 0.42, 0);
+  if (pose) {
+    group.rotation.x = pose.rotationX;
+    group.rotation.y = pose.rotationY;
+    group.position.set(...pose.position);
   }
 }
 
