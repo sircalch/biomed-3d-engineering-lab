@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { EquipmentItem, LayerMode } from "@/lib/biomed-data";
 
 interface DeviceSceneProps {
@@ -194,15 +196,27 @@ export function DeviceScene({
     const scene = sceneRef.current;
     if (!scene) return;
 
+    let cancelled = false;
+
     disposeGroup(modelGroupRef.current);
     if (modelGroupRef.current) {
       scene.remove(modelGroupRef.current);
     }
 
-    const built = createDeviceGroup(equipment, layerMode);
-    modelGroupRef.current = built.group;
-    hotspotMeshesRef.current = built.hotspots;
-    scene.add(built.group);
+    loadDeviceGroup(equipment, layerMode).then((built) => {
+      if (cancelled) {
+        disposeGroup(built.group);
+        return;
+      }
+
+      modelGroupRef.current = built.group;
+      hotspotMeshesRef.current = built.hotspots;
+      scene.add(built.group);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [equipment, layerMode]);
 
   useEffect(() => {
@@ -226,6 +240,59 @@ export function DeviceScene({
   );
 }
 
+async function loadDeviceGroup(equipment: EquipmentItem, layerMode: LayerMode) {
+  const glbGroup = await loadGlbDeviceGroup(equipment);
+  if (glbGroup) {
+    const hotspots = addHotspots(glbGroup, equipment);
+    return { group: glbGroup, hotspots };
+  }
+
+  return createDeviceGroup(equipment, layerMode);
+}
+
+async function loadGlbDeviceGroup(equipment: EquipmentItem) {
+  const url = `/models/${equipment.id}.glb`;
+
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    if (!response.ok) return null;
+
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync(url);
+    const group = new THREE.Group();
+    group.name = `${equipment.id}-glb`;
+    group.add(gltf.scene);
+
+    gltf.scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (mesh.isMesh) {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+    });
+
+    normalizeImportedModel(group);
+    return group;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeImportedModel(group: THREE.Group) {
+  const box = new THREE.Box3().setFromObject(group);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  group.position.sub(center);
+  const maxAxis = Math.max(size.x, size.y, size.z, 0.001);
+  group.scale.setScalar(2.35 / maxAxis);
+  group.rotation.x = -0.08;
+  group.rotation.y = 0.12;
+  group.position.set(0.16, 0.42, 0);
+}
+
 function createDeviceGroup(equipment: EquipmentItem, layerMode: LayerMode) {
   const group = new THREE.Group();
   group.name = equipment.id;
@@ -233,7 +300,6 @@ function createDeviceGroup(equipment: EquipmentItem, layerMode: LayerMode) {
   group.rotation.y = 0.12;
   group.position.set(0.18, 0.62, 0);
 
-  const hotspotMeshes: HotspotMesh[] = [];
   const isOpen = layerMode === "layers" || layerMode === "cross-section";
   const isGhost = layerMode === "compare";
 
@@ -351,6 +417,15 @@ function createDeviceGroup(equipment: EquipmentItem, layerMode: LayerMode) {
     addBox(group, [2.7, 0.06, 0.06], [0.02, -0.96, 0.62], material("#00bcd4"));
   }
 
+  const hotspotMeshes = addHotspots(group, equipment);
+
+  group.scale.setScalar(0.74);
+  return { group, hotspots: hotspotMeshes };
+}
+
+function addHotspots(group: THREE.Group, equipment: EquipmentItem) {
+  const hotspotMeshes: HotspotMesh[] = [];
+
   equipment.hotspots.forEach((hotspot) => {
     const mesh = new THREE.Mesh(
       new THREE.SphereGeometry(0.07, 28, 28),
@@ -381,8 +456,7 @@ function createDeviceGroup(equipment: EquipmentItem, layerMode: LayerMode) {
     hotspotMeshes.push(mesh);
   });
 
-  group.scale.setScalar(0.74);
-  return { group, hotspots: hotspotMeshes };
+  return hotspotMeshes;
 }
 
 function addInternalBoards(
@@ -404,7 +478,9 @@ function addBox(
   position: [number, number, number],
   mat: THREE.Material,
 ) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), mat);
+  const radius = Math.min(size[0], size[1], size[2]) * 0.16;
+  const geometry = new RoundedBoxGeometry(size[0], size[1], size[2], 5, radius);
+  const mesh = new THREE.Mesh(geometry, mat);
   mesh.position.set(...position);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -429,6 +505,7 @@ function addPanel(
 ) {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(...size), mat);
   mesh.position.set(...position);
+  mesh.rotation.y = Math.PI;
   mesh.renderOrder = 20;
   group.add(mesh);
 
@@ -526,6 +603,7 @@ function screenMaterial(label: string) {
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
   const mat = new THREE.MeshStandardMaterial({
     map: texture,
     roughness: 0.2,

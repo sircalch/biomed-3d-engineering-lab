@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "assets:blender": "blender --background --python tools/blender/create-biomed-models.py"
   },
   "dependencies": {
     "lucide-react": "^1.28.0",

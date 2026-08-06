@@ -42,6 +42,48 @@ Cada equipo incluye:
 - Documentacion esperada
 - Practica relacionada
 
+## Modelos 3D profesionales
+
+La app carga automaticamente un archivo GLB si existe en:
+
+```text
+public/models/{equipment-id}.glb
+```
+
+Ids soportados:
+
+```text
+patient-monitor.glb
+infusion-pump.glb
+defibrillator.glb
+ventilator.glb
+autoclave.glb
+neonatal-incubator.glb
+electrosurgery.glb
+```
+
+Si no existe el GLB, la app usa un modelo procedural de respaldo en Three.js.
+
+### Generar modelos con Blender
+
+Instala Blender y asegúrate de que el comando `blender` exista en PATH. Luego ejecuta:
+
+```bash
+npm run assets:blender
+```
+
+Esto corre:
+
+```bash
+blender --background --python tools/blender/create-biomed-models.py
+```
+
+Y exporta los GLB a `public/models`.
+
+### Usar Tripo AI u otra API
+
+Tambien puedes generar modelos externos con Tripo, Fal, Meshy, Spline o Sketchfab, siempre que tengas licencia de uso compatible. Exporta cada equipo como GLB y guárdalo con el nombre esperado en `public/models`.
+
 ## Integracion BioMedTools
 
 Las ligas se configuran con variables publicas:

@@ -1,0 +1,312 @@
+import math
+from pathlib import Path
+
+import bpy
+from mathutils import Vector
+
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT_DIR = ROOT / "public" / "models"
+
+
+def reset_scene():
+    bpy.ops.object.select_all(action="SELECT")
+    bpy.ops.object.delete()
+    bpy.context.scene.render.engine = "CYCLES"
+    bpy.context.scene.view_settings.view_transform = "Filmic"
+    bpy.context.scene.view_settings.look = "Medium High Contrast"
+    bpy.context.scene.unit_settings.system = "METRIC"
+
+
+def mat(name, color, roughness=0.55, metallic=0.05, emission=None, emission_strength=0.0):
+    material = bpy.data.materials.new(name)
+    material.use_nodes = True
+    bsdf = material.node_tree.nodes.get("Principled BSDF")
+    if bsdf:
+        bsdf.inputs["Base Color"].default_value = color
+        bsdf.inputs["Roughness"].default_value = roughness
+        bsdf.inputs["Metallic"].default_value = metallic
+        if emission:
+            bsdf.inputs["Emission Color"].default_value = emission
+            bsdf.inputs["Emission Strength"].default_value = emission_strength
+    return material
+
+
+MATS = {}
+
+
+def build_materials():
+    global MATS
+    MATS = {
+        "shell": mat("warm clinical shell", (0.82, 0.9, 0.96, 1), 0.5, 0.08),
+        "shell_dark": mat("deep blue shell", (0.05, 0.16, 0.29, 1), 0.48, 0.08),
+        "screen": mat(
+            "active screen",
+            (0.015, 0.08, 0.13, 1),
+            0.25,
+            0.0,
+            (0.0, 0.8, 0.55, 1),
+            0.45,
+        ),
+        "screen_blue": mat(
+            "blue diagnostic screen",
+            (0.02, 0.12, 0.22, 1),
+            0.24,
+            0.0,
+            (0.0, 0.45, 1.0, 1),
+            0.35,
+        ),
+        "teal": mat("sterile teal", (0.0, 0.55, 0.5, 1), 0.42, 0.12),
+        "blue": mat("clinical blue", (0.04, 0.28, 0.63, 1), 0.42, 0.12),
+        "steel": mat("brushed steel", (0.52, 0.6, 0.67, 1), 0.28, 0.55),
+        "dark": mat("graphite", (0.08, 0.1, 0.13, 1), 0.36, 0.25),
+        "amber": mat("warning amber", (0.95, 0.55, 0.08, 1), 0.5, 0.05),
+        "red": mat("emergency red", (0.78, 0.13, 0.1, 1), 0.45, 0.04),
+        "glass": mat("clear blue polycarbonate", (0.65, 0.9, 1.0, 0.32), 0.08, 0.0),
+        "rubber": mat("soft rubber", (0.02, 0.025, 0.03, 1), 0.72, 0.0),
+    }
+    MATS["glass"].blend_method = "BLEND"
+    MATS["glass"].use_screen_refraction = True
+
+
+def cube(name, loc, scale, material, bevel=0.05):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+    obj = bpy.context.object
+    obj.name = name
+    obj.dimensions = scale
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    if material:
+        obj.data.materials.append(material)
+    if bevel:
+        bevel_mod = obj.modifiers.new("soft industrial bevel", "BEVEL")
+        bevel_mod.width = bevel
+        bevel_mod.segments = 8
+        bevel_mod.affect = "EDGES"
+        normal_mod = obj.modifiers.new("weighted normals", "WEIGHTED_NORMAL")
+        normal_mod.keep_sharp = True
+    return obj
+
+
+def cyl(name, loc, radius, depth, material, rotation=(0, 0, 0), vertices=64):
+    bpy.ops.mesh.primitive_cylinder_add(
+        vertices=vertices, radius=radius, depth=depth, location=loc, rotation=rotation
+    )
+    obj = bpy.context.object
+    obj.name = name
+    if material:
+        obj.data.materials.append(material)
+    normal_mod = obj.modifiers.new("weighted normals", "WEIGHTED_NORMAL")
+    normal_mod.keep_sharp = True
+    return obj
+
+
+def torus(name, loc, major, minor, material, rotation=(0, 0, 0)):
+    bpy.ops.mesh.primitive_torus_add(
+        major_radius=major,
+        minor_radius=minor,
+        major_segments=96,
+        minor_segments=12,
+        location=loc,
+        rotation=rotation,
+    )
+    obj = bpy.context.object
+    obj.name = name
+    if material:
+        obj.data.materials.append(material)
+    return obj
+
+
+def cable(name, points, material, bevel=0.025):
+    curve = bpy.data.curves.new(name, "CURVE")
+    curve.dimensions = "3D"
+    curve.resolution_u = 18
+    curve.bevel_depth = bevel
+    curve.bevel_resolution = 5
+    spl = curve.splines.new("BEZIER")
+    spl.bezier_points.add(len(points) - 1)
+    for point, coord in zip(spl.bezier_points, points):
+        point.co = Vector(coord)
+        point.handle_left_type = "AUTO"
+        point.handle_right_type = "AUTO"
+    obj = bpy.data.objects.new(name, curve)
+    bpy.context.collection.objects.link(obj)
+    if material:
+        obj.data.materials.append(material)
+    return obj
+
+
+def panel(name, loc, size, label, material=None):
+    screen = cube(name, loc, (size[0], size[1], 0.025), material or MATS["screen"], bevel=0.02)
+    screen.rotation_euler[0] = 0
+    add_label(label, (loc[0] - size[0] * 0.35, loc[1] + size[1] * 0.18, loc[2] + 0.018), 0.12)
+    draw_waveform(loc, size)
+    return screen
+
+
+def add_label(text, loc, size=0.11, align="LEFT", material=None):
+    bpy.ops.object.text_add(location=loc, rotation=(math.radians(90), 0, 0))
+    obj = bpy.context.object
+    obj.name = f"label {text}"
+    obj.data.body = text
+    obj.data.align_x = align
+    obj.data.align_y = "CENTER"
+    obj.data.size = size
+    obj.data.extrude = 0.002
+    obj.data.materials.append(material or MATS["screen"])
+    return obj
+
+
+def draw_waveform(loc, size):
+    points = []
+    steps = 18
+    x0 = loc[0] - size[0] * 0.38
+    y0 = loc[1] - size[1] * 0.08
+    z = loc[2] + 0.03
+    for i in range(steps + 1):
+        x = x0 + size[0] * 0.76 * (i / steps)
+        spike = 0.16 if i % 6 == 3 else 0
+        y = y0 + math.sin(i * 1.6) * 0.035 + spike
+        points.append((x, y, z))
+    cable("screen waveform", points, MATS["teal"], bevel=0.008)
+
+
+def screws(x_values, y_values, z):
+    for x in x_values:
+        for y in y_values:
+            cyl("recessed screw", (x, y, z), 0.035, 0.018, MATS["steel"], rotation=(math.pi / 2, 0, 0), vertices=32)
+
+
+def patient_monitor():
+    cube("rounded monitor body", (0, 0, 0), (2.45, 1.45, 0.38), MATS["shell"], bevel=0.12)
+    panel("flush diagnostic display", (-0.38, 0.22, 0.205), (1.25, 0.74), "ECG")
+    for i, mat_name in enumerate(["blue", "teal", "amber"]):
+        cube("soft key", (0.66, 0.39 - i * 0.29, 0.225), (0.35, 0.18, 0.045), MATS[mat_name], bevel=0.04)
+    cube("lower speaker grille", (-0.25, -0.58, 0.215), (0.8, 0.1, 0.035), MATS["dark"], bevel=0.02)
+    for i in range(6):
+        cube("speaker slit", (-0.55 + i * 0.12, -0.58, 0.24), (0.045, 0.015, 0.012), MATS["steel"], bevel=0.004)
+    cyl("spo2 port", (1.15, 0.08, 0.22), 0.07, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
+    cyl("ecg port", (1.15, -0.2, 0.22), 0.062, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
+    cable("spo2 cable", [(1.2, 0.08, 0.24), (1.55, 0.2, 0.24), (1.9, -0.15, 0.05)], MATS["blue"], 0.025)
+    cube("finger sensor", (2.0, -0.24, 0.04), (0.42, 0.16, 0.18), MATS["teal"], bevel=0.05)
+    screws([-1.05, 1.05], [-0.56, 0.56], 0.22)
+
+
+def infusion_pump():
+    cube("pump body", (-0.35, 0, 0), (1.4, 1.9, 0.52), MATS["shell"], bevel=0.11)
+    panel("flow screen", (-0.64, 0.46, 0.285), (0.54, 0.48), "125")
+    cube("door frame", (0.18, 0.02, 0.31), (0.68, 1.26, 0.08), MATS["dark"], bevel=0.04)
+    cyl("upper roller", (0.18, 0.34, 0.38), 0.16, 0.82, MATS["steel"], rotation=(0, math.pi / 2, 0))
+    cyl("lower roller", (0.18, -0.27, 0.38), 0.13, 0.8, MATS["steel"], rotation=(0, math.pi / 2, 0))
+    cable("transparent infusion set", [(-1.18, -0.25, 0.32), (-0.28, 0.05, 0.48), (1.18, -0.03, 0.5), (1.86, 0.28, 0.18)], MATS["teal"], 0.018)
+    cyl("syringe barrel", (1.16, -0.02, 0.46), 0.14, 0.58, MATS["glass"], rotation=(math.pi / 2, 0, 0))
+    cube("start button", (-0.64, -0.48, 0.3), (0.28, 0.14, 0.04), MATS["teal"], bevel=0.03)
+    cube("stop button", (-0.28, -0.48, 0.3), (0.28, 0.14, 0.04), MATS["red"], bevel=0.03)
+
+
+def defibrillator():
+    cube("defib body", (0, -0.06, 0), (2.15, 1.04, 0.56), MATS["shell"], bevel=0.11)
+    torus("integrated handle", (0, 0.68, 0.0), 0.72, 0.055, MATS["steel"], rotation=(0, math.pi / 2, 0))
+    panel("sync display", (-0.54, 0.18, 0.31), (0.84, 0.42), "SYNC")
+    cube("energy selector", (0.34, 0.24, 0.32), (0.42, 0.2, 0.05), MATS["amber"], bevel=0.04)
+    cube("charge key", (0.86, 0.25, 0.32), (0.28, 0.18, 0.05), MATS["blue"], bevel=0.035)
+    cube("shock key", (0.86, -0.02, 0.32), (0.28, 0.18, 0.05), MATS["red"], bevel=0.035)
+    cube("paddle left", (1.32, 0.06, 0.2), (0.42, 0.34, 0.16), MATS["dark"], bevel=0.04)
+    cube("paddle right", (1.32, -0.42, 0.12), (0.42, 0.34, 0.16), MATS["dark"], bevel=0.04)
+    cable("paddle cable", [(0.94, -0.1, 0.18), (1.32, 0.42, 0.28), (1.67, -0.42, 0.12)], MATS["rubber"], 0.025)
+
+
+def ventilator():
+    cube("ventilator body", (-0.24, 0.14, 0), (1.75, 1.36, 0.56), MATS["shell"], bevel=0.11)
+    panel("vent display", (-0.62, 0.45, 0.305), (0.72, 0.42), "FLOW")
+    cyl("flow turbine", (0.35, 0.15, 0.34), 0.22, 0.62, MATS["steel"], rotation=(0, math.pi / 2, 0))
+    cyl("exp valve", (0.38, -0.28, 0.34), 0.16, 0.58, MATS["teal"], rotation=(0, math.pi / 2, 0))
+    cable("inspiratory limb", [(0.78, 0.18, 0.32), (1.34, 0.45, 0.48), (1.88, 0.08, 0.2)], MATS["blue"], 0.04)
+    cable("expiratory limb", [(0.78, -0.22, 0.32), (1.42, -0.56, 0.22), (1.9, -0.18, 0.08)], MATS["teal"], 0.04)
+    cube("rolling base", (-0.24, -0.92, -0.06), (1.28, 0.16, 0.2), MATS["steel"], bevel=0.05)
+    cyl("wheel left", (-0.8, -1.02, 0.12), 0.18, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
+    cyl("wheel right", (0.32, -1.02, 0.12), 0.18, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
+
+
+def autoclave():
+    cyl("pressure chamber", (0.04, 0.02, 0), 0.76, 1.8, MATS["shell"], rotation=(0, math.pi / 2, 0))
+    cyl("front door", (-0.88, 0.02, 0), 0.66, 0.08, MATS["steel"], rotation=(0, math.pi / 2, 0))
+    torus("door gasket", (-0.93, 0.02, 0), 0.57, 0.025, MATS["rubber"], rotation=(0, math.pi / 2, 0))
+    cyl("gauge", (0.96, 0.52, 0.35), 0.16, 0.055, MATS["screen_blue"], rotation=(math.pi / 2, 0, 0))
+    panel("cycle panel", (0.96, 0.05, 0.5), (0.5, 0.28), "121C", MATS["screen_blue"])
+    cube("drain rail", (0.1, -0.75, 0), (1.25, 0.13, 0.18), MATS["steel"], bevel=0.04)
+    cable("drain tube", [(0.52, -0.72, 0.34), (0.96, -0.86, 0.22), (1.2, -0.68, 0.05)], MATS["teal"], 0.027)
+
+
+def incubator():
+    cube("base warmer", (0, -0.42, 0), (2.35, 0.42, 0.96), MATS["shell"], bevel=0.09)
+    cube("polycarbonate canopy", (0, 0.18, 0.04), (2.08, 0.82, 0.84), MATS["glass"], bevel=0.12)
+    panel("temperature console", (0.9, -0.16, 0.58), (0.72, 0.36), "TEMP", MATS["screen_blue"])
+    cyl("skin probe", (-0.86, -0.1, 0.62), 0.09, 0.34, MATS["teal"], rotation=(math.pi / 2, 0, 0))
+    cable("probe cable", [(-0.88, -0.08, 0.62), (-1.28, -0.22, 0.36), (-1.48, -0.54, 0.16)], MATS["teal"], 0.016)
+    cyl("heater element", (0.52, -0.72, 0.2), 0.14, 0.7, MATS["amber"], rotation=(0, math.pi / 2, 0))
+    cube("mattress", (-0.1, -0.18, 0.26), (1.36, 0.16, 0.46), MATS["teal"], bevel=0.04)
+
+
+def electrosurgery():
+    cube("esu body", (-0.18, 0.04, 0), (2.02, 1.04, 0.56), MATS["shell"], bevel=0.11)
+    panel("esu display", (-0.76, 0.3, 0.31), (0.7, 0.32), "CUT", MATS["screen_blue"])
+    cyl("cut output", (0.14, 0.32, 0.32), 0.1, 0.08, MATS["blue"], rotation=(math.pi / 2, 0, 0))
+    cyl("coag output", (0.48, 0.32, 0.32), 0.1, 0.08, MATS["amber"], rotation=(math.pi / 2, 0, 0))
+    cyl("return port", (0.92, -0.2, 0.32), 0.072, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
+    cable("active pencil cable", [(-1.08, -0.36, 0.34), (-1.66, -0.18, 0.22), (-2.0, -0.5, 0.06)], MATS["rubber"], 0.023)
+    cable("return pad cable", [(1.0, -0.2, 0.34), (1.48, -0.08, 0.18), (1.8, -0.34, 0.04)], MATS["teal"], 0.023)
+    cube("foot pedal", (0.62, -0.74, 0.02), (0.46, 0.14, 0.32), MATS["dark"], bevel=0.04)
+
+
+MODELS = {
+    "patient-monitor": patient_monitor,
+    "infusion-pump": infusion_pump,
+    "defibrillator": defibrillator,
+    "ventilator": ventilator,
+    "autoclave": autoclave,
+    "neonatal-incubator": incubator,
+    "electrosurgery": electrosurgery,
+}
+
+
+def add_lighting():
+    bpy.ops.object.light_add(type="AREA", location=(0, -4, 5))
+    key = bpy.context.object
+    key.name = "large studio softbox"
+    key.data.energy = 520
+    key.data.size = 5
+    bpy.ops.object.light_add(type="POINT", location=(-3, 2, 2.5))
+    rim = bpy.context.object
+    rim.name = "cyan rim light"
+    rim.data.color = (0.55, 0.86, 1.0)
+    rim.data.energy = 90
+
+
+def export_model(model_id, builder):
+    reset_scene()
+    build_materials()
+    add_lighting()
+    builder()
+
+    for obj in bpy.context.scene.objects:
+        obj.select_set(obj.type in {"MESH", "CURVE", "FONT"})
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    output = OUT_DIR / f"{model_id}.glb"
+    bpy.ops.export_scene.gltf(
+        filepath=str(output),
+        export_format="GLB",
+        use_selection=True,
+        export_apply=True,
+        export_materials="EXPORT",
+    )
+    print(f"exported {output}")
+
+
+def main():
+    for model_id, builder in MODELS.items():
+        export_model(model_id, builder)
+
+
+if __name__ == "__main__":
+    main()
