@@ -56,14 +56,41 @@ def build_materials():
             (0.0, 0.45, 1.0, 1),
             0.35,
         ),
+        "screen_green": mat(
+            "monitor phosphor green",
+            (0.05, 0.9, 0.42, 1),
+            0.28,
+            0.0,
+            (0.05, 0.9, 0.42, 1),
+            0.75,
+        ),
+        "screen_cyan": mat(
+            "monitor cyan trace",
+            (0.0, 0.78, 0.92, 1),
+            0.28,
+            0.0,
+            (0.0, 0.78, 0.92, 1),
+            0.7,
+        ),
+        "screen_white": mat(
+            "monitor white trace",
+            (0.9, 0.95, 1.0, 1),
+            0.3,
+            0.0,
+            (0.9, 0.95, 1.0, 1),
+            0.55,
+        ),
         "teal": mat("sterile teal", (0.0, 0.55, 0.5, 1), 0.42, 0.12),
         "blue": mat("clinical blue", (0.04, 0.28, 0.63, 1), 0.42, 0.12),
         "steel": mat("brushed steel", (0.52, 0.6, 0.67, 1), 0.28, 0.55),
         "dark": mat("graphite", (0.08, 0.1, 0.13, 1), 0.36, 0.25),
         "amber": mat("warning amber", (0.95, 0.55, 0.08, 1), 0.5, 0.05),
+        "orange": mat("rotary encoder orange", (1.0, 0.34, 0.08, 1), 0.42, 0.04),
         "red": mat("emergency red", (0.78, 0.13, 0.1, 1), 0.45, 0.04),
         "glass": mat("clear blue polycarbonate", (0.65, 0.9, 1.0, 0.32), 0.08, 0.0),
         "rubber": mat("soft rubber", (0.02, 0.025, 0.03, 1), 0.72, 0.0),
+        "soft_gray": mat("medical side panel gray", (0.62, 0.68, 0.7, 1), 0.58, 0.03),
+        "bezel": mat("molded white front bezel", (0.92, 0.96, 0.98, 1), 0.48, 0.06),
     }
     MATS["glass"].blend_method = "BLEND"
     MATS["glass"].use_screen_refraction = True
@@ -144,9 +171,23 @@ def panel(name, loc, size, label, material=None):
 
 
 def add_label(text, loc, size=0.11, align="LEFT", material=None):
-    bpy.ops.object.text_add(location=loc, rotation=(math.radians(90), 0, 0))
+    bpy.ops.object.text_add(location=loc, rotation=(0, 0, 0))
     obj = bpy.context.object
     obj.name = f"label {text}"
+    obj.data.body = text
+    obj.data.align_x = align
+    obj.data.align_y = "CENTER"
+    obj.data.size = size
+    obj.data.extrude = 0.002
+    obj.data.materials.append(material or MATS["screen"])
+    return obj
+
+
+def front_label(text, loc, size=0.11, align="LEFT", material=None, face="-Y"):
+    rotation = (math.radians(90), 0, 0) if face == "-Y" else (math.radians(-90), 0, 0)
+    bpy.ops.object.text_add(location=loc, rotation=rotation)
+    obj = bpy.context.object
+    obj.name = f"front label {text}"
     obj.data.body = text
     obj.data.align_x = align
     obj.data.align_y = "CENTER"
@@ -170,25 +211,123 @@ def draw_waveform(loc, size):
     cable("screen waveform", points, MATS["teal"], bevel=0.008)
 
 
+def monitor_trace(name, x0, y0, z, width, amp, material, beats=4, jagged=False):
+    points = []
+    steps = 64
+    for i in range(steps + 1):
+        t = i / steps
+        x = x0 + width * t
+        if jagged:
+            y = y0 + math.sin(t * math.tau * beats) * amp * 0.8 + math.sin(t * math.tau * beats * 2.7) * amp * 0.38
+        else:
+            spike = amp * 1.55 if (i % 16) in {5, 6} else 0
+            dip = -amp * 0.7 if (i % 16) == 8 else 0
+            y = y0 + math.sin(t * math.tau * beats) * amp * 0.35 + spike + dip
+        points.append((x, y, z))
+    cable(name, points, material, bevel=0.006)
+
+
+def monitor_number(text, x, y, z, material, size=0.12):
+    add_label(text, (x, y, z), size=size, material=material)
+
+
+def monitor_trace_front(name, x0, z0, y, width, amp, material, beats=4, jagged=False):
+    points = []
+    steps = 64
+    for i in range(steps + 1):
+        t = i / steps
+        x = x0 + width * t
+        if jagged:
+            z = z0 + math.sin(t * math.tau * beats) * amp * 0.8 + math.sin(t * math.tau * beats * 2.7) * amp * 0.38
+        else:
+            spike = amp * 1.55 if (i % 16) in {5, 6} else 0
+            dip = -amp * 0.7 if (i % 16) == 8 else 0
+            z = z0 + math.sin(t * math.tau * beats) * amp * 0.35 + spike + dip
+        points.append((x, y, z))
+    cable(name, points, material, bevel=0.006)
+
+
+def monitor_number_front(text, x, z, y, material, size=0.12):
+    front_label(text, (x, y, z), size=size, material=material)
+
+
+def port(name, loc, radius, ring_material, inner_material=None, rotation=(0, math.pi / 2, 0)):
+    cyl(f"{name} socket", loc, radius, 0.045, inner_material or MATS["dark"], rotation=rotation, vertices=48)
+    torus(
+        f"{name} color ring",
+        (loc[0] - 0.028, loc[1], loc[2]),
+        radius * 1.08,
+        0.01,
+        ring_material,
+        rotation=rotation,
+    )
+
+
 def screws(x_values, y_values, z):
     for x in x_values:
         for y in y_values:
             cyl("recessed screw", (x, y, z), 0.035, 0.018, MATS["steel"], rotation=(math.pi / 2, 0, 0), vertices=32)
 
 
+def front_screws(x_values, z_values, y):
+    for x in x_values:
+        for z in z_values:
+            cyl("front recessed screw", (x, y, z), 0.035, 0.018, MATS["steel"], rotation=(math.pi / 2, 0, 0), vertices=32)
+
+
 def patient_monitor():
-    cube("rounded monitor body", (0, 0, 0), (2.45, 1.45, 0.38), MATS["shell"], bevel=0.12)
-    panel("flush diagnostic display", (-0.38, 0.22, 0.205), (1.25, 0.74), "ECG")
-    for i, mat_name in enumerate(["blue", "teal", "amber"]):
-        cube("soft key", (0.66, 0.39 - i * 0.29, 0.225), (0.35, 0.18, 0.045), MATS[mat_name], bevel=0.04)
-    cube("lower speaker grille", (-0.25, -0.58, 0.215), (0.8, 0.1, 0.035), MATS["dark"], bevel=0.02)
-    for i in range(6):
-        cube("speaker slit", (-0.55 + i * 0.12, -0.58, 0.24), (0.045, 0.015, 0.012), MATS["steel"], bevel=0.004)
-    cyl("spo2 port", (1.15, 0.08, 0.22), 0.07, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
-    cyl("ecg port", (1.15, -0.2, 0.22), 0.062, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
-    cable("spo2 cable", [(1.2, 0.08, 0.24), (1.55, 0.2, 0.24), (1.9, -0.15, 0.05)], MATS["blue"], 0.025)
-    cube("finger sensor", (2.0, -0.24, 0.04), (0.42, 0.16, 0.18), MATS["teal"], bevel=0.05)
-    screws([-1.05, 1.05], [-0.56, 0.56], 0.22)
+    # Generic bedside multiparameter monitor, modeled from common real device proportions:
+    # deep rear housing, thick molded front bezel, active screen, side I/O panel and bottom controls.
+    front_y = -0.68
+    detail_y = -0.82
+
+    cube("deep rear electronics housing", (-0.18, 0.04, 0.02), (2.58, 1.18, 1.42), MATS["soft_gray"], bevel=0.1)
+    cube("molded front bezel", (0.12, front_y, 0.02), (2.78, 0.22, 1.72), MATS["bezel"], bevel=0.13)
+    cube("inner shadow gasket", (0.12, detail_y, 0.1), (2.16, 0.05, 1.18), MATS["dark"], bevel=0.04)
+    cube("active waveform display", (-0.07, detail_y - 0.018, 0.14), (1.58, 0.022, 1.02), MATS["screen"], bevel=0.025)
+    cube("numeric parameter strip", (0.96, detail_y - 0.022, 0.14), (0.46, 0.024, 1.02), MATS["shell_dark"], bevel=0.018)
+    cube("top manufacturer badge area", (-0.16, detail_y - 0.035, 0.76), (1.92, 0.016, 0.1), MATS["steel"], bevel=0.012)
+    front_label("BioMed", (-0.92, detail_y - 0.052, 0.76), size=0.06, material=MATS["screen_white"])
+
+    # Screen separators and traces.
+    for z in [0.46, 0.21, -0.04, -0.29]:
+        cube("screen grid divider", (-0.07, detail_y - 0.045, z), (1.5, 0.008, 0.006), MATS["dark"], bevel=0.0)
+    monitor_trace_front("ecg trace upper", -0.78, 0.56, detail_y - 0.06, 1.25, 0.06, MATS["screen_green"], beats=4)
+    monitor_trace_front("ecg trace middle", -0.78, 0.32, detail_y - 0.06, 1.25, 0.05, MATS["screen_green"], beats=4)
+    monitor_trace_front("pleth trace cyan", -0.78, 0.04, detail_y - 0.06, 1.25, 0.08, MATS["screen_cyan"], beats=3, jagged=True)
+    monitor_trace_front("resp trace white", -0.78, -0.24, detail_y - 0.06, 1.25, 0.06, MATS["screen_white"], beats=2, jagged=True)
+
+    # Numeric vitals column: HR, NIBP, SpO2, RR.
+    for z in [0.5, 0.22, -0.06, -0.34]:
+        cube("vital value compartment", (0.96, detail_y - 0.055, z), (0.42, 0.018, 0.22), MATS["dark"], bevel=0.01)
+    monitor_number_front("60", 0.86, 0.51, detail_y - 0.076, MATS["screen_green"], 0.15)
+    monitor_number_front("120/80", 0.82, 0.24, detail_y - 0.076, MATS["screen_white"], 0.07)
+    monitor_number_front("98", 0.86, -0.05, detail_y - 0.076, MATS["screen_cyan"], 0.14)
+    monitor_number_front("20", 0.88, -0.33, detail_y - 0.076, MATS["screen_white"], 0.12)
+
+    # Bottom control strip and rotary knob.
+    cube("lower control fascia", (0.08, detail_y - 0.04, -0.73), (2.15, 0.05, 0.18), MATS["bezel"], bevel=0.035)
+    for i in range(7):
+        x = -0.76 + i * 0.22
+        cube("membrane control key", (x, detail_y - 0.07, -0.72), (0.13, 0.035, 0.1), MATS["steel"], bevel=0.018)
+    cyl("orange rotary encoder", (1.16, detail_y - 0.085, -0.68), 0.12, 0.09, MATS["orange"], rotation=(math.pi / 2, 0, 0), vertices=64)
+    torus("encoder grip ring", (1.16, detail_y - 0.13, -0.68), 0.095, 0.012, MATS["amber"], rotation=(math.pi / 2, 0, 0))
+
+    # Side connector panel, visible from the left like common patient monitors.
+    cube("left side recessed connector plate", (-1.54, -0.16, 0.06), (0.06, 0.82, 1.14), MATS["bezel"], bevel=0.035)
+    cube("left side blue labeling plate", (-1.575, -0.16, 0.06), (0.025, 0.7, 1.0), MATS["soft_gray"], bevel=0.02)
+    for z in [0.43, 0.23, 0.03, -0.17]:
+        port("small blue auxiliary port", (-1.6, -0.42, z), 0.055, MATS["blue"])
+    port("large red nibp port", (-1.6, -0.42, -0.42), 0.13, MATS["red"])
+    port("spo2 blue port", (-1.6, -0.08, 0.34), 0.1, MATS["blue"])
+    port("ecg black port", (-1.6, -0.08, 0.04), 0.09, MATS["dark"])
+    port("temperature orange port", (-1.6, -0.08, -0.27), 0.1, MATS["orange"])
+
+    # Back taper and small feet.
+    cube("rear chamfer impression", (-0.92, 0.62, -0.55), (1.2, 0.28, 0.12), MATS["shell"], bevel=0.05)
+    cube("left front foot", (-0.72, -0.86, -0.92), (0.32, 0.24, 0.08), MATS["rubber"], bevel=0.035)
+    cube("right front foot", (0.86, -0.86, -0.92), (0.32, 0.24, 0.08), MATS["rubber"], bevel=0.035)
+    front_screws([-1.08, 1.25], [-0.74, 0.78], detail_y - 0.07)
 
 
 def infusion_pump():

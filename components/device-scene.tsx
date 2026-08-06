@@ -160,7 +160,7 @@ export function DeviceScene({
     const animate = () => {
       frame = requestAnimationFrame(animate);
       if (modelGroupRef.current && !pointerRef.current.dragging) {
-        modelGroupRef.current.rotation.y += 0.0024;
+        modelGroupRef.current.rotation.y += 0.00025;
       }
 
       hotspotMeshesRef.current.forEach((mesh) => {
@@ -271,14 +271,14 @@ async function loadGlbDeviceGroup(equipment: EquipmentItem) {
       }
     });
 
-    normalizeImportedModel(group);
+    normalizeImportedModel(group, equipment.id);
     return group;
   } catch {
     return null;
   }
 }
 
-function normalizeImportedModel(group: THREE.Group) {
+function normalizeImportedModel(group: THREE.Group, equipmentId?: EquipmentItem["id"]) {
   const box = new THREE.Box3().setFromObject(group);
   const size = new THREE.Vector3();
   const center = new THREE.Vector3();
@@ -291,6 +291,12 @@ function normalizeImportedModel(group: THREE.Group) {
   group.rotation.x = -0.08;
   group.rotation.y = 0.12;
   group.position.set(0.16, 0.42, 0);
+
+  if (equipmentId === "patient-monitor") {
+    group.rotation.x = -0.04;
+    group.rotation.y = -0.34;
+    group.position.set(0.1, 0.42, 0);
+  }
 }
 
 function createDeviceGroup(equipment: EquipmentItem, layerMode: LayerMode) {
