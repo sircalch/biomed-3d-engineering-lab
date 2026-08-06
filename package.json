@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "assets": "npm run assets:textures && npm run assets:blender",
+    "assets:textures": "python tools/blender/create-panel-textures.py",
     "assets:blender": "blender --background --python tools/blender/create-biomed-models.py"
   },
   "dependencies": {

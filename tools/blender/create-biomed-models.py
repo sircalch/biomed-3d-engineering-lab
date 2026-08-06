@@ -7,6 +7,7 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "public" / "models"
+TEXTURE_DIR = ROOT / "public" / "textures" / "device-fronts"
 
 
 def reset_scene():
@@ -33,10 +34,12 @@ def mat(name, color, roughness=0.55, metallic=0.05, emission=None, emission_stre
 
 
 MATS = {}
+TEXTURE_MATS = {}
 
 
 def build_materials():
-    global MATS
+    global MATS, TEXTURE_MATS
+    TEXTURE_MATS = {}
     MATS = {
         "shell": mat("warm clinical shell", (0.82, 0.9, 0.96, 1), 0.5, 0.08),
         "shell_dark": mat("deep blue shell", (0.05, 0.16, 0.29, 1), 0.48, 0.08),
@@ -96,6 +99,36 @@ def build_materials():
     MATS["glass"].use_screen_refraction = True
 
 
+def texture_material(name, filename, emission_strength=0.04):
+    key = f"{name}:{filename}"
+    if key in TEXTURE_MATS:
+        return TEXTURE_MATS[key]
+
+    texture_path = TEXTURE_DIR / filename
+    if not texture_path.exists():
+        return MATS["bezel"]
+
+    image = bpy.data.images.load(str(texture_path))
+    material = bpy.data.materials.new(name)
+    material.use_nodes = True
+    material.blend_method = "BLEND"
+    material.diffuse_color = (1, 1, 1, 1)
+    nodes = material.node_tree.nodes
+    bsdf = nodes.get("Principled BSDF")
+    texture_node = nodes.new("ShaderNodeTexImage")
+    texture_node.image = image
+    texture_node.extension = "CLIP"
+    if bsdf:
+        material.node_tree.links.new(texture_node.outputs["Color"], bsdf.inputs["Base Color"])
+        material.node_tree.links.new(texture_node.outputs["Alpha"], bsdf.inputs["Alpha"])
+        bsdf.inputs["Roughness"].default_value = 0.34
+        bsdf.inputs["Metallic"].default_value = 0.02
+        bsdf.inputs["Emission Color"].default_value = (0.05, 0.11, 0.17, 1)
+        bsdf.inputs["Emission Strength"].default_value = emission_strength
+    TEXTURE_MATS[key] = material
+    return material
+
+
 def cube(name, loc, scale, material, bevel=0.05):
     bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
     obj = bpy.context.object
@@ -111,6 +144,15 @@ def cube(name, loc, scale, material, bevel=0.05):
         bevel_mod.affect = "EDGES"
         normal_mod = obj.modifiers.new("weighted normals", "WEIGHTED_NORMAL")
         normal_mod.keep_sharp = True
+    return obj
+
+
+def texture_plane(name, loc, size, filename, emission_strength=0.04):
+    bpy.ops.mesh.primitive_plane_add(size=1, location=loc, rotation=(math.radians(90), 0, 0))
+    obj = bpy.context.object
+    obj.name = name
+    obj.scale = (size[0], size[1], 1)
+    obj.data.materials.append(texture_material(f"{name} material", filename, emission_strength))
     return obj
 
 
@@ -349,6 +391,13 @@ def patient_monitor():
     cube("left front foot", (-0.72, -0.86, -0.92), (0.32, 0.24, 0.08), MATS["rubber"], bevel=0.035)
     cube("right front foot", (0.86, -0.86, -0.92), (0.32, 0.24, 0.08), MATS["rubber"], bevel=0.035)
     front_screws([-1.08, 1.25], [-0.74, 0.78], detail_y - 0.07)
+    texture_plane(
+        "photo-real monitor front overlay",
+        (0.12, -0.965, 0.02),
+        (2.66, 1.58),
+        "patient-monitor-front.png",
+        0.08,
+    )
 
 
 def infusion_pump():
@@ -371,6 +420,13 @@ def infusion_pump():
     cube("stop button", (-0.34, front_y - 0.035, -0.5), (0.24, 0.035, 0.12), MATS["red"], bevel=0.03)
     cube("left rubber foot", (-0.74, -0.16, -1.02), (0.32, 0.18, 0.08), MATS["rubber"], bevel=0.025)
     cube("right rubber foot", (0.06, -0.16, -1.02), (0.32, 0.18, 0.08), MATS["rubber"], bevel=0.025)
+    texture_plane(
+        "photo-real infusion pump face",
+        (-0.34, -0.61, 0.02),
+        (1.02, 1.78),
+        "infusion-pump-front.png",
+        0.05,
+    )
 
 
 def defibrillator():
@@ -390,6 +446,13 @@ def defibrillator():
     cube("paddle right", (1.08, -0.2, -0.36), (0.42, 0.24, 0.16), MATS["dark"], bevel=0.04)
     cable("paddle cable", [(0.64, front_y - 0.06, -0.18), (1.02, -0.34, 0.0), (1.1, -0.28, -0.36)], MATS["rubber"], 0.025)
     cube("printer slot", (-0.34, front_y - 0.05, -0.24), (0.58, 0.05, 0.06), MATS["dark"], bevel=0.012)
+    texture_plane(
+        "photo-real defibrillator front",
+        (0, -0.675, 0),
+        (1.96, 0.62),
+        "defibrillator-front.png",
+        0.045,
+    )
 
 
 def ventilator():
@@ -401,13 +464,20 @@ def ventilator():
     cyl("exp valve", (0.34, front_y - 0.05, -0.08), 0.13, 0.42, MATS["teal"], rotation=(math.pi / 2, 0, math.pi / 2))
     cyl("inspiratory outlet coupler", (0.74, front_y - 0.08, 0.28), 0.1, 0.14, MATS["blue"], rotation=(math.pi / 2, 0, 0))
     cyl("expiratory inlet coupler", (0.74, front_y - 0.08, -0.08), 0.1, 0.14, MATS["teal"], rotation=(math.pi / 2, 0, 0))
-    cable("inspiratory limb", [(0.74, front_y - 0.1, 0.28), (1.12, front_y - 0.3, 0.42), (1.52, front_y - 0.18, 0.2), (1.78, front_y - 0.08, 0.02)], MATS["blue"], 0.04)
-    cable("expiratory limb", [(0.74, front_y - 0.1, -0.08), (1.16, front_y - 0.32, -0.22), (1.52, front_y - 0.18, -0.12), (1.78, front_y - 0.08, 0.02)], MATS["teal"], 0.04)
-    cube("patient y piece", (1.86, front_y - 0.06, 0.02), (0.22, 0.16, 0.12), MATS["bezel"], bevel=0.03)
+    cable("inspiratory limb", [(0.74, front_y - 0.1, 0.28), (1.02, front_y - 0.28, 0.42), (1.28, front_y - 0.18, 0.2), (1.46, front_y - 0.08, 0.02)], MATS["blue"], 0.04)
+    cable("expiratory limb", [(0.74, front_y - 0.1, -0.08), (1.04, front_y - 0.3, -0.22), (1.28, front_y - 0.18, -0.12), (1.46, front_y - 0.08, 0.02)], MATS["teal"], 0.04)
+    cube("patient y piece", (1.52, front_y - 0.06, 0.02), (0.22, 0.16, 0.12), MATS["bezel"], bevel=0.03)
     cube("rolling base", (-0.24, -0.02, -0.78), (1.28, 0.58, 0.16), MATS["steel"], bevel=0.05)
     cube("cart mast", (-0.86, 0.0, -0.34), (0.1, 0.1, 0.78), MATS["steel"], bevel=0.025)
     cyl("wheel left", (-0.8, -0.24, -0.94), 0.14, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
     cyl("wheel right", (0.32, -0.24, -0.94), 0.14, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
+    texture_plane(
+        "photo-real ventilator front",
+        (-0.24, -0.585, 0.14),
+        (1.48, 1.08),
+        "ventilator-front.png",
+        0.055,
+    )
 
 
 def autoclave():
@@ -424,6 +494,13 @@ def autoclave():
     cable("drain tube", [(0.52, -0.5, -0.2), (0.96, -0.66, -0.34), (1.2, -0.54, -0.58)], MATS["teal"], 0.027)
     cube("left autoclave foot", (-0.62, -0.24, -0.84), (0.34, 0.18, 0.12), MATS["rubber"], bevel=0.03)
     cube("right autoclave foot", (0.82, -0.24, -0.84), (0.34, 0.18, 0.12), MATS["rubber"], bevel=0.03)
+    texture_plane(
+        "photo-real autoclave control panel",
+        (0.92, -0.625, 0.12),
+        (0.54, 0.34),
+        "autoclave-panel.png",
+        0.04,
+    )
 
 
 def incubator():
@@ -442,6 +519,13 @@ def incubator():
     cube("cart crossbar", (0, -0.02, -0.88), (1.92, 0.1, 0.12), MATS["steel"], bevel=0.025)
     cyl("incubator caster left", (-0.78, -0.18, -1.02), 0.11, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
     cyl("incubator caster right", (0.78, -0.18, -1.02), 0.11, 0.08, MATS["dark"], rotation=(math.pi / 2, 0, 0))
+    texture_plane(
+        "photo-real incubator console",
+        (0.9, -0.62, -0.18),
+        (0.68, 0.38),
+        "incubator-panel.png",
+        0.04,
+    )
 
 
 def electrosurgery():
@@ -453,12 +537,19 @@ def electrosurgery():
     cyl("coag output", (0.48, front_y - 0.06, 0.12), 0.08, 0.08, MATS["amber"], rotation=(math.pi / 2, 0, 0))
     cyl("return port", (0.92, front_y - 0.06, -0.12), 0.062, 0.08, MATS["steel"], rotation=(math.pi / 2, 0, 0))
     cube("mode knob", (-0.18, front_y - 0.05, -0.18), (0.16, 0.05, 0.16), MATS["amber"], bevel=0.03)
-    cable("active pencil cable", [(-0.96, front_y - 0.06, -0.1), (-1.36, front_y - 0.22, -0.12), (-1.66, front_y - 0.16, -0.32)], MATS["rubber"], 0.023)
-    cyl("active pencil handpiece", (-1.78, front_y - 0.18, -0.34), 0.045, 0.38, MATS["dark"], rotation=(0, math.pi / 2, 0))
-    cable("return pad cable", [(0.92, front_y - 0.06, -0.12), (1.28, front_y - 0.18, -0.2), (1.52, front_y - 0.12, -0.36)], MATS["teal"], 0.023)
-    cube("return electrode pad", (1.68, front_y - 0.12, -0.38), (0.34, 0.18, 0.05), MATS["teal"], bevel=0.03)
+    cable("active pencil cable", [(-0.82, front_y - 0.06, -0.1), (-1.08, front_y - 0.2, -0.12), (-1.28, front_y - 0.14, -0.3)], MATS["rubber"], 0.023)
+    cyl("active pencil handpiece", (-1.4, front_y - 0.16, -0.32), 0.045, 0.32, MATS["dark"], rotation=(0, math.pi / 2, 0))
+    cable("return pad cable", [(0.82, front_y - 0.06, -0.12), (0.98, front_y - 0.18, -0.2), (1.08, front_y - 0.12, -0.32)], MATS["teal"], 0.023)
+    cube("return electrode pad", (1.2, front_y - 0.12, -0.34), (0.3, 0.16, 0.05), MATS["teal"], bevel=0.03)
     cube("foot pedal", (0.62, -0.28, -0.56), (0.46, 0.24, 0.12), MATS["dark"], bevel=0.04)
     cable("foot pedal cable", [(0.54, -0.28, -0.5), (0.26, -0.36, -0.26), (0.12, front_y - 0.06, -0.1)], MATS["rubber"], 0.018)
+    texture_plane(
+        "photo-real electrosurgery fascia",
+        (-0.18, -0.61, 0.0),
+        (1.78, 0.42),
+        "electrosurgery-front.png",
+        0.045,
+    )
 
 
 MODELS = {

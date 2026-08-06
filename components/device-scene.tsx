@@ -29,44 +29,44 @@ const importedModelPoses: Partial<
   "patient-monitor": {
     rotationX: -0.04,
     rotationY: -0.28,
-    scale: 2.24,
+    scale: 2.48,
     position: [0.04, 0.34, 0],
   },
   "infusion-pump": {
     rotationX: -0.05,
     rotationY: 0.18,
-    scale: 2.25,
+    scale: 2.62,
     position: [0.08, 0.34, 0],
   },
   defibrillator: {
     rotationX: -0.06,
     rotationY: -0.2,
-    scale: 2.34,
+    scale: 2.92,
     position: [0.02, 0.34, 0],
   },
   ventilator: {
     rotationX: -0.06,
     rotationY: -0.18,
-    scale: 2.36,
-    position: [0.02, 0.34, 0],
+    scale: 3.16,
+    position: [-0.14, 0.34, 0],
   },
   autoclave: {
     rotationX: -0.07,
     rotationY: -0.26,
-    scale: 2.32,
+    scale: 2.78,
     position: [0.02, 0.32, 0],
   },
   "neonatal-incubator": {
     rotationX: -0.05,
     rotationY: -0.24,
-    scale: 2.48,
+    scale: 2.9,
     position: [0.04, 0.32, 0],
   },
   electrosurgery: {
     rotationX: -0.05,
     rotationY: -0.18,
-    scale: 3.05,
-    position: [0.04, 0.34, 0],
+    scale: 3.65,
+    position: [0.02, 0.34, 0],
   },
 };
 

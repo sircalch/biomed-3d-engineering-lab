@@ -64,25 +64,45 @@ electrosurgery.glb
 
 Si no existe el GLB, la app usa un modelo procedural de respaldo en Three.js.
 
-### Generar modelos con Blender
+### Generar texturas y modelos
 
-Instala Blender y asegúrate de que el comando `blender` exista en PATH. Luego ejecuta:
+Los modelos usan una estrategia hibrida:
+
+- Geometria 3D generada con Blender.
+- Texturas frontales PNG para pantallas, botones, puertos, perillas y paneles de control.
+
+Esto evita que los equipos parezcan cubos genericos y permite mantener un pipeline reproducible.
+
+Primero genera las texturas:
+
+```bash
+npm run assets:textures
+```
+
+Luego exporta los GLB:
 
 ```bash
 npm run assets:blender
 ```
 
-Esto corre:
+O ejecuta todo el pipeline:
 
 ```bash
-blender --background --python tools/blender/create-biomed-models.py
+npm run assets
 ```
 
-Y exporta los GLB a `public/models`.
+Requisitos:
+
+- Python con Pillow disponible para `tools/blender/create-panel-textures.py`.
+- Blender instalado y disponible como comando `blender` en PATH para `tools/blender/create-biomed-models.py`.
+
+Las texturas se guardan en `public/textures/device-fronts` y los GLB en `public/models`.
 
 ### Usar Tripo AI u otra API
 
-Tambien puedes generar modelos externos con Tripo, Fal, Meshy, Spline o Sketchfab, siempre que tengas licencia de uso compatible. Exporta cada equipo como GLB y guárdalo con el nombre esperado en `public/models`.
+Tambien puedes generar modelos externos con Tripo, Fal, Meshy, Spline o Sketchfab, siempre que tengas licencia de uso compatible. Exporta cada equipo como GLB y guardalo con el nombre esperado en `public/models`.
+
+Si se agregan assets de terceros, registra fuente, autor, URL, licencia y requisitos de atribucion en el repositorio antes de publicar.
 
 ## Integracion BioMedTools
 
