@@ -116,6 +116,7 @@ Si se agregan assets de terceros, registra fuente, autor, URL, licencia y requis
 Las ligas se configuran con variables publicas:
 
 ```env
+NEXT_PUBLIC_SITE_URL=https://biomed-3d-engineering-lab.vercel.app
 NEXT_PUBLIC_BIOMED_CORE_URL=https://biomedtools-mx-core.vercel.app
 NEXT_PUBLIC_QUIZ_ARENA_URL=https://biomed-quiz-arena.vercel.app
 NEXT_PUBLIC_CASE_SIMULATOR_URL=https://biomed-case-simulator.vercel.app
@@ -146,6 +147,13 @@ http://localhost:3000
 ```bash
 npm run build
 ```
+
+## Calidad del repositorio
+
+- CI en GitHub Actions: `npm ci`, `npm run lint`, `npm run build` y `npm audit --audit-level=high`.
+- Variables documentadas en `.env.example`.
+- Politica de seguridad en `SECURITY.md`.
+- Metadata Open Graph/Twitter configurada para enlaces compartidos.
 
 ## Deploy en Vercel
 
