@@ -94,7 +94,7 @@ const layerModes: Array<{
 
 const panelTabs: Array<{ id: PanelTab; label: string }> = [
   { id: "overview", label: "Ficha" },
-  { id: "signals", label: "Señales" },
+  { id: "signals", label: "Senales" },
   { id: "safety", label: "Riesgos" },
   { id: "maintenance", label: "Mantenimiento" },
 ];
@@ -267,9 +267,23 @@ export function BiomedLabApp() {
             Explora equipos medicos en 3D y conecta teoria, diagnostico y evidencia tecnica.
           </h1>
           <p>
-            Selecciona un dispositivo, revisa subsistemas, activa capas, interpreta señales y
+            Selecciona un dispositivo, revisa subsistemas, activa capas, interpreta senales y
             envia la actividad hacia Quiz Arena, Case Simulator o Report Builder.
           </p>
+        </div>
+        <div className="hero-atlas" aria-label="Referencia visual de equipos biomedicos">
+          <Image
+            src="/biomed-equipment-atlas.png"
+            alt="Atlas visual de equipos biomedicos"
+            fill
+            sizes="(min-width: 1240px) 360px, 100vw"
+            className="object-cover"
+            priority
+          />
+          <div>
+            <strong>Referencia visual</strong>
+            <span>Monitor, bomba, desfibrilador, autoclave e incubadora.</span>
+          </div>
         </div>
         <div className="hero-metrics" aria-label="Metricas del laboratorio">
           {labMetrics.map((metric) => {
@@ -290,7 +304,7 @@ export function BiomedLabApp() {
           <div className="panel-heading">
             <div>
               <span>Biblioteca</span>
-              <strong>Equipos biomédicos</strong>
+              <strong>Equipos biomedicos</strong>
             </div>
             <Boxes size={22} aria-hidden="true" />
           </div>
@@ -450,7 +464,7 @@ export function BiomedLabApp() {
                   <polyline points={wavePoints} />
                 </svg>
                 <div>
-                  <span>Señales relacionadas</span>
+                  <span>Senales relacionadas</span>
                   <strong>{selected.signals.join(" / ")}</strong>
                 </div>
               </div>

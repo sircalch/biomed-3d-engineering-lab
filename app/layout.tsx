@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BioMed 3D Engineering Lab",
   description:
-    "Laboratorio interactivo 3D para estudiar equipos medicos, subsistemas, senales, mantenimiento y documentacion biomédica.",
+    "Laboratorio interactivo 3D para estudiar equipos medicos, subsistemas, senales, mantenimiento y documentacion biomedica.",
   openGraph: {
     title: "BioMed 3D Engineering Lab",
     description:

@@ -115,7 +115,7 @@ export function DeviceScene({
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.setAttribute("data-testid", "biomed-3d-canvas");
-    renderer.domElement.setAttribute("aria-label", "Visor 3D de equipo biomédico");
+    renderer.domElement.setAttribute("aria-label", "Visor 3D de equipo biomedico");
     rendererRef.current = renderer;
     mount.appendChild(renderer.domElement);
 

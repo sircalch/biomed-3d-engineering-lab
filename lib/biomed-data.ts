@@ -112,7 +112,7 @@ export const equipmentCatalog: EquipmentItem[] = [
     ],
     commonFailures: [
       "SpO2 sin lectura por sensor desconectado o mal colocado.",
-      "Ruido ECG por electrodos secos, cable dañado o mala preparacion de piel.",
+      "Ruido ECG por electrodos secos, cable danado o mala preparacion de piel.",
       "NIBP no infla por fuga, brazalete incorrecto o manguera doblada.",
       "Bateria con baja autonomia o cargador no conectado.",
     ],
@@ -148,9 +148,9 @@ export const equipmentCatalog: EquipmentItem[] = [
       {
         id: "ecg",
         label: "Modulo ECG",
-        subsystem: "Bioseñales",
+        subsystem: "Biosenales",
         description:
-          "Adquiere señales de baja amplitud; el ruido suele venir de electrodos, cableado o preparacion.",
+          "Adquiere senales de baja amplitud; el ruido suele venir de electrodos, cableado o preparacion.",
         position: [0.04, -0.55, 0.78],
       },
       {
@@ -290,7 +290,7 @@ export const equipmentCatalog: EquipmentItem[] = [
     ],
     commonFailures: [
       "No carga energia por bateria, capacitor o fuente.",
-      "No reconoce palas o pads por conector dañado.",
+      "No reconoce palas o pads por conector danado.",
       "Sin trazo ECG por cable o modulo.",
       "Impresora sin papel o con mecanismo trabado.",
     ],
@@ -357,7 +357,7 @@ export const equipmentCatalog: EquipmentItem[] = [
     summary:
       "Controla flujo, presion, volumen y alarmas respiratorias con circuitos, sensores y suministro de gases.",
     learningGoal:
-      "Distinguir componentes tecnicos, alarmas y verificacion con pulmón de prueba o analizador.",
+      "Distinguir componentes tecnicos, alarmas y verificacion con pulmon de prueba o analizador.",
     subsystems: [
       "Turbina/mezclador",
       "Valvulas",
@@ -385,7 +385,7 @@ export const equipmentCatalog: EquipmentItem[] = [
     ],
     maintenanceChecklist: [
       "Inspeccion de circuito, filtros y valvulas.",
-      "Prueba con pulmón de prueba.",
+      "Prueba con pulmon de prueba.",
       "Verificacion de sensores de flujo y presion.",
       "Revision de bateria interna y alarmas.",
     ],
@@ -498,7 +498,7 @@ export const equipmentCatalog: EquipmentItem[] = [
         label: "Sello de puerta",
         subsystem: "Contencion",
         description:
-          "Un sello dañado provoca fugas y ciclos incompletos.",
+          "Un sello danado provoca fugas y ciclos incompletos.",
         position: [-0.86, 0.14, 0.72],
       },
       {
@@ -557,7 +557,7 @@ export const equipmentCatalog: EquipmentItem[] = [
     ],
     commonFailures: [
       "Temperatura inestable por sensor, ventilador o resistencia.",
-      "Alarma de sonda por cable dañado.",
+      "Alarma de sonda por cable danado.",
       "Ruido excesivo por ventilador.",
       "Humidificador con residuos o fuga.",
     ],
@@ -637,16 +637,16 @@ export const equipmentCatalog: EquipmentItem[] = [
       { label: "Energia", value: "Radiofrecuencia para corte/coagulacion" },
       { label: "Seguridad", value: "Monitoreo de placa de retorno si aplica" },
       { label: "Prueba", value: "Analizador ESU con carga adecuada" },
-      { label: "Riesgo", value: "Quemadura por mala placa o accesorio dañado" },
+      { label: "Riesgo", value: "Quemadura por mala placa o accesorio danado" },
     ],
     safetyRisks: [
       { risk: "Placa de retorno mal adherida", level: "alto" },
-      { risk: "Cable activo con aislamiento dañado", level: "alto" },
+      { risk: "Cable activo con aislamiento danado", level: "alto" },
       { risk: "Potencia no verificada", level: "medio" },
     ],
     commonFailures: [
       "Alarma REM por placa o cable de retorno.",
-      "No activa con pedal por conector dañado.",
+      "No activa con pedal por conector danado.",
       "Salida fuera de tolerancia en corte/coagulacion.",
       "Accesorio activo con aislamiento deteriorado.",
     ],

@@ -104,6 +104,13 @@ Tambien puedes generar modelos externos con Tripo, Fal, Meshy, Spline o Sketchfa
 
 Si se agregan assets de terceros, registra fuente, autor, URL, licencia y requisitos de atribucion en el repositorio antes de publicar.
 
+### Recursos visuales
+
+- Iconografia tecnica: Lucide React.
+- Iconos de salud incluidos en `public/assets/health-icons`: Health Icons.
+- Referencias visuales abiertas consultadas: Bioicons, Health Icons y NIH BioArt.
+- Atlas de equipos: asset local compartido con BioMedTools MX Core.
+
 ## Integracion BioMedTools
 
 Las ligas se configuran con variables publicas:

@@ -13,6 +13,7 @@
   --cyan-600: #008bba;
   --teal-700: #00796b;
   --teal-600: #009688;
+  --brand-purple: #c77dff;
   --green-700: #0f8f62;
   --amber-600: #d97706;
   --red-600: #dc2626;
@@ -39,10 +40,14 @@ body {
   min-width: 320px;
   margin: 0;
   background:
+    radial-gradient(circle at 8% 0%, rgba(199, 125, 255, 0.12), transparent 28%),
+    linear-gradient(rgba(13, 71, 161, 0.052) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 71, 161, 0.042) 1px, transparent 1px),
     linear-gradient(180deg, rgba(239, 247, 255, 0.92) 0%, rgba(238, 244, 251, 1) 42%),
     var(--background);
+  background-size: auto, 44px 44px, 44px 44px, auto, auto;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
 a {
@@ -88,6 +93,15 @@ button {
   background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(18px);
+}
+
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: 7px 0 0 7px;
+  background: linear-gradient(180deg, var(--blue-900), var(--brand-purple), var(--teal-600));
 }
 
 .brand-lockup {
@@ -165,10 +179,10 @@ button {
 
 .app-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(480px, 620px);
+  grid-template-columns: minmax(0, 0.95fr) minmax(300px, 0.58fr) minmax(360px, 0.72fr);
   align-items: center;
-  gap: 12px;
-  padding: 9px 13px;
+  gap: 10px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 7px;
   background:
@@ -198,6 +212,46 @@ button {
 
 .app-hero p {
   display: none;
+}
+
+.hero-atlas {
+  position: relative;
+  min-height: 124px;
+  overflow: hidden;
+  border: 1px solid rgba(13, 71, 161, 0.14);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.hero-atlas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(13, 71, 161, 0.82), transparent 62%);
+}
+
+.hero-atlas div {
+  position: absolute;
+  inset: auto auto 12px 12px;
+  z-index: 2;
+  max-width: 220px;
+  color: #fff;
+}
+
+.hero-atlas strong,
+.hero-atlas span {
+  display: block;
+}
+
+.hero-atlas strong {
+  font-size: 0.86rem;
+}
+
+.hero-atlas span {
+  margin-top: 3px;
+  color: #dff7ff;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .hero-metrics {
@@ -235,8 +289,8 @@ button {
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 300px minmax(520px, 1fr) 350px;
-  gap: 12px;
+  grid-template-columns: 286px minmax(560px, 1fr) 334px;
+  gap: 10px;
   align-items: stretch;
 }
 
