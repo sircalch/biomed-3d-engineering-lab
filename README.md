@@ -94,7 +94,8 @@ npm run assets
 Requisitos:
 
 - Python con Pillow disponible para `tools/blender/create-panel-textures.py`.
-- Blender instalado y disponible como comando `blender` en PATH para `tools/blender/create-biomed-models.py`.
+- Blender instalado. El script intenta detectar `blender` en PATH, instalaciones de Blender Foundation y la ruta de Steam en Windows.
+- Si Blender esta en otra ubicacion, define `BLENDER_BIN` con la ruta completa al ejecutable.
 
 Las texturas se guardan en `public/textures/device-fronts` y los GLB en `public/models`.
 
@@ -128,6 +129,15 @@ Flujo recomendado:
 
 ```text
 BioMed 3D Lab -> Quiz Arena -> Case Simulator -> Report Builder
+```
+
+El laboratorio tambien acepta enlaces directos:
+
+```text
+/?equipment=patient-monitor
+/?equipment=infusion-pump
+/?category=monitoreo-signos-vitales
+/?category=bombas-infusion-terapia
 ```
 
 ## Desarrollo local

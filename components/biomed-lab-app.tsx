@@ -146,8 +146,15 @@ export function BiomedLabApp() {
     queueMicrotask(() => {
       if (cancelled) return;
 
+      const routeEquipment = resolveEquipmentFromUrl();
       const parsed = readStoredState();
-      if (parsed.selectedId && equipmentCatalog.some((item) => item.id === parsed.selectedId)) {
+      if (routeEquipment) {
+        setSelectedId(routeEquipment.id);
+        setActiveHotspotId(routeEquipment.hotspots[0].id);
+      } else if (
+        parsed.selectedId &&
+        equipmentCatalog.some((item) => item.id === parsed.selectedId)
+      ) {
         const storedEquipment =
           equipmentCatalog.find((item) => item.id === parsed.selectedId) ?? equipmentCatalog[0];
         setSelectedId(parsed.selectedId);
@@ -179,6 +186,7 @@ export function BiomedLabApp() {
     setSelectedId(item.id);
     setActiveHotspotId(item.hotspots[0].id);
     setActivePanel("overview");
+    writeEquipmentRoute(item);
     window.requestAnimationFrame(() => {
       document.getElementById("equipos")?.scrollIntoView({
         behavior: "smooth",
@@ -766,4 +774,55 @@ function readStoredState(): StoredLabState {
     window.localStorage.removeItem(storageKey);
     return {};
   }
+}
+
+function resolveEquipmentFromUrl() {
+  if (typeof window === "undefined") return null;
+
+  const params = new URLSearchParams(window.location.search);
+  const candidates = [
+    params.get("equipment"),
+    params.get("device"),
+    params.get("category"),
+    params.get("caseCategory"),
+  ].filter(Boolean) as string[];
+
+  for (const value of candidates) {
+    const match = equipmentCatalog.find((item) => matchesEquipmentRoute(item, value));
+    if (match) return match;
+  }
+
+  return null;
+}
+
+function matchesEquipmentRoute(item: EquipmentItem, value: string) {
+  const normalizedValue = normalizeRouteValue(value);
+  const routeCandidates = [
+    item.id,
+    item.name,
+    item.shortName,
+    item.category,
+    item.practice.quizCategory,
+    item.practice.caseCategory,
+    item.practice.label,
+  ];
+
+  return routeCandidates.some((candidate) => normalizeRouteValue(candidate) === normalizedValue);
+}
+
+function normalizeRouteValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function writeEquipmentRoute(item: EquipmentItem) {
+  if (typeof window === "undefined") return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("equipment", item.id);
+  window.history.replaceState(null, "", `${url.pathname}?${url.searchParams}${url.hash}`);
 }

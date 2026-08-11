@@ -9,7 +9,7 @@
     "lint": "eslint",
     "assets": "npm run assets:textures && npm run assets:blender",
     "assets:textures": "python tools/blender/create-panel-textures.py",
-    "assets:blender": "blender --background --python tools/blender/create-biomed-models.py"
+    "assets:blender": "node tools/blender/run-blender-assets.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",

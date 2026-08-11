@@ -83,7 +83,7 @@ export function DeviceScene({
   const modelGroupRef = useRef<THREE.Group | null>(null);
   const hotspotMeshesRef = useRef<HotspotMesh[]>([]);
   const pointerRef = useRef({ dragging: false, x: 0, y: 0 });
-  const zoomRef = useRef(6.2);
+  const zoomRef = useRef(5.65);
   const callbackRef = useRef(onHotspotSelect);
   const activeHotspotRef = useRef(activeHotspotId);
 
@@ -100,11 +100,11 @@ export function DeviceScene({
     if (!mount) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#f7fbff");
+    scene.background = new THREE.Color("#f6fbff");
     sceneRef.current = scene;
 
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    camera.position.set(0.05, 0.58, zoomRef.current);
+    const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    camera.position.set(0.04, 0.52, zoomRef.current);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
@@ -114,6 +114,9 @@ export function DeviceScene({
       preserveDrawingBuffer: true,
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.domElement.setAttribute("data-testid", "biomed-3d-canvas");
     renderer.domElement.setAttribute("aria-label", "Visor 3D de equipo biomedico");
     rendererRef.current = renderer;
@@ -124,6 +127,11 @@ export function DeviceScene({
 
     const key = new THREE.DirectionalLight("#ffffff", 2.8);
     key.position.set(4, 4.5, 5);
+    key.castShadow = true;
+    key.shadow.mapSize.width = 2048;
+    key.shadow.mapSize.height = 2048;
+    key.shadow.camera.near = 0.5;
+    key.shadow.camera.far = 12;
     scene.add(key);
 
     const rim = new THREE.DirectionalLight("#7dd3fc", 1.35);
@@ -134,9 +142,7 @@ export function DeviceScene({
     fill.position.set(0, 1.8, 2);
     scene.add(fill);
 
-    const grid = new THREE.GridHelper(5.2, 18, "#c6d8ee", "#e4eef9");
-    grid.position.y = -1.02;
-    scene.add(grid);
+    addSceneBackdrop(scene);
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
@@ -188,8 +194,8 @@ export function DeviceScene({
       event.preventDefault();
       zoomRef.current = THREE.MathUtils.clamp(
         zoomRef.current + event.deltaY * 0.003,
-        4.2,
-        8.2,
+        3.85,
+        7.4,
       );
       camera.position.z = zoomRef.current;
     };
@@ -353,6 +359,63 @@ function normalizeImportedModel(group: THREE.Group, equipmentId?: EquipmentItem[
     group.rotation.y = pose.rotationY;
     group.position.set(...pose.position);
   }
+}
+
+function addSceneBackdrop(scene: THREE.Scene) {
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(7, 5.2),
+    new THREE.ShadowMaterial({
+      color: "#16324f",
+      opacity: 0.16,
+      transparent: true,
+    }),
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.075;
+  floor.position.z = 0.08;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  const platform = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.62, 1.82, 0.055, 96),
+    material("#e8f1fa", {
+      roughness: 0.52,
+      metalness: 0.04,
+    }),
+  );
+  platform.position.set(0.08, -1.09, 0.05);
+  platform.receiveShadow = true;
+  scene.add(platform);
+
+  const platformEdge = new THREE.Mesh(
+    new THREE.TorusGeometry(1.72, 0.015, 12, 128),
+    material("#9fb6cc", {
+      roughness: 0.35,
+      metalness: 0.2,
+    }),
+  );
+  platformEdge.rotation.x = Math.PI / 2;
+  platformEdge.position.set(0.08, -1.055, 0.05);
+  scene.add(platformEdge);
+
+  const grid = new THREE.GridHelper(5.5, 18, "#b9cee4", "#e0ebf6");
+  grid.position.y = -1.045;
+  const gridMaterial = grid.material as THREE.Material;
+  gridMaterial.transparent = true;
+  gridMaterial.opacity = 0.42;
+  scene.add(grid);
+
+  const rearPanel = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.8, 2.6),
+    material("#eef7ff", {
+      roughness: 0.7,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.62,
+    }),
+  );
+  rearPanel.position.set(0, 0.14, -1.42);
+  scene.add(rearPanel);
 }
 
 function createDeviceGroup(equipment: EquipmentItem, layerMode: LayerMode) {
