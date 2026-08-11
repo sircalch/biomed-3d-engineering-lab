@@ -35,6 +35,7 @@ import {
   buildQuizUrl,
   buildReportUrl,
   equipmentCatalog,
+  externalReferenceResources,
   labMetrics,
   moduleLinks,
   workflowSteps,
@@ -247,6 +248,7 @@ export function BiomedLabApp() {
           <a href="#equipos">Equipos</a>
           <a href="#laboratorio">Laboratorio</a>
           <a href="#flujo">Flujo</a>
+          <a href="#recursos">Recursos</a>
           <a href="#notas">Notas</a>
         </nav>
 
@@ -572,6 +574,35 @@ export function BiomedLabApp() {
             </a>
           </div>
         </article>
+      </section>
+
+      <section className="resource-panel" id="recursos" aria-labelledby="resources-title">
+        <div className="section-heading">
+          <div>
+            <span>Fuentes y assets abiertos</span>
+            <h2 id="resources-title">Recursos curados para mejorar modelos, iconos y referencias.</h2>
+          </div>
+          <BookOpen size={22} aria-hidden="true" />
+        </div>
+        <div className="resource-card-grid">
+          {externalReferenceResources.map((resource) => (
+            <a
+              href={resource.href}
+              target="_blank"
+              rel="noreferrer"
+              className="resource-card"
+              key={resource.title}
+            >
+              <span>{resource.label}</span>
+              <strong>{resource.title}</strong>
+              <p>{resource.text}</p>
+              <small>
+                Abrir fuente
+                <ExternalLink size={14} aria-hidden="true" />
+              </small>
+            </a>
+          ))}
+        </div>
       </section>
 
       <section className="evidence-grid" id="notas">

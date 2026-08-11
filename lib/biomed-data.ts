@@ -737,6 +737,33 @@ export const workflowSteps = [
   },
 ];
 
+export const externalReferenceResources = [
+  {
+    title: "NIH 3D",
+    label: "Modelos 3D",
+    href: "https://3d.nih.gov/",
+    text: "Portal abierto para modelos bioscientificos y medicos que pueden servir como referencia o reemplazo de GLB cuando la licencia del modelo lo permita.",
+  },
+  {
+    title: "NIH BioArt Source",
+    label: "Ilustracion biomedica",
+    href: "https://bioart.niaid.nih.gov/",
+    text: "Biblioteca profesional de ilustraciones biomedicas para mejorar diagramas, paneles educativos y materiales docentes.",
+  },
+  {
+    title: "Health Icons",
+    label: "Iconografia",
+    href: "https://healthicons.org/",
+    text: "Iconos abiertos de salud para interfaces educativas, tarjetas de equipos y senalizacion de funciones.",
+  },
+  {
+    title: "FDA Medical Device Databases",
+    label: "Consulta tecnica",
+    href: "https://www.fda.gov/medical-devices/device-advice-comprehensive-regulatory-assistance/medical-device-databases",
+    text: "Bases publicas para consulta formativa de clases de dispositivos, codigos, 510(k), PMA y contexto regulatorio.",
+  },
+] as const;
+
 export function buildQuizUrl(item: EquipmentItem) {
   return `${moduleLinks.quiz}?category=${encodeURIComponent(item.practice.quizCategory)}`;
 }

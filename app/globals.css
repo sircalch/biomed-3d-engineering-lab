@@ -879,6 +879,75 @@ button {
   gap: 12px;
 }
 
+.resource-panel {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(245, 250, 255, 0.96)),
+    repeating-linear-gradient(90deg, rgba(21, 101, 192, 0.05) 0 1px, transparent 1px 40px);
+  box-shadow: var(--shadow-soft);
+  padding: 16px;
+}
+
+.resource-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.resource-card {
+  display: flex;
+  min-height: 210px;
+  flex-direction: column;
+  border: 1px solid #dfe9f5;
+  border-radius: 7px;
+  background: #fff;
+  padding: 14px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.resource-card:hover {
+  border-color: rgba(21, 101, 192, 0.48);
+  box-shadow: 0 10px 20px rgba(16, 45, 88, 0.09);
+  transform: translateY(-1px);
+}
+
+.resource-card span {
+  color: var(--blue-700);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.resource-card strong {
+  margin-top: 8px;
+  color: #10233f;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.resource-card p {
+  flex: 1;
+  margin: 10px 0 0;
+  color: #52647c;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.resource-card small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--blue-900);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .lab-panel {
   min-width: 0;
   padding: 16px;
@@ -1078,7 +1147,8 @@ textarea:focus {
   .app-hero,
   .workspace-grid,
   .lower-grid,
-  .evidence-grid {
+  .evidence-grid,
+  .resource-card-grid {
     grid-template-columns: 1fr;
   }
 

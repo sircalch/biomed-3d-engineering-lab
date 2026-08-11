@@ -110,6 +110,7 @@ Si se agregan assets de terceros, registra fuente, autor, URL, licencia y requis
 - Iconos de salud incluidos en `public/assets/health-icons`: Health Icons.
 - Referencias visuales abiertas consultadas: Bioicons, Health Icons y NIH BioArt.
 - Atlas de equipos: asset local compartido con BioMedTools MX Core.
+- Panel `Fuentes y assets abiertos` dentro de la app para revisar NIH 3D, NIH BioArt, Health Icons y FDA Medical Device Databases.
 
 ## Integracion BioMedTools
 
@@ -154,6 +155,7 @@ npm run build
 - Variables documentadas en `.env.example`.
 - Politica de seguridad en `SECURITY.md`.
 - Metadata Open Graph/Twitter configurada para enlaces compartidos.
+- Trazabilidad de recursos externos en `THIRD_PARTY_NOTICES.md`.
 
 ## Deploy en Vercel
 
