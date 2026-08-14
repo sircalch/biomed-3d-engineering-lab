@@ -757,10 +757,22 @@ export const externalReferenceResources = [
     text: "Iconos abiertos de salud para interfaces educativas, tarjetas de equipos y senalizacion de funciones.",
   },
   {
+    title: "BioIcons",
+    label: "Iconografia cientifica",
+    href: "https://bioicons.com/",
+    text: "Biblioteca de ilustraciones cientificas con licencias permisivas para diagramas, fichas tecnicas y material docente.",
+  },
+  {
     title: "FDA Medical Device Databases",
     label: "Consulta tecnica",
     href: "https://www.fda.gov/medical-devices/device-advice-comprehensive-regulatory-assistance/medical-device-databases",
     text: "Bases publicas para consulta formativa de clases de dispositivos, codigos, 510(k), PMA y contexto regulatorio.",
+  },
+  {
+    title: "AccessGUDID",
+    label: "Identificacion de dispositivos",
+    href: "https://accessgudid.nlm.nih.gov/",
+    text: "Portal publico para consultar identificadores, nombres de dispositivo y datos UDI usados como referencia educativa.",
   },
 ] as const;
 
