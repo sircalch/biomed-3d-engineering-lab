@@ -334,6 +334,35 @@ export function BiomedLabApp() {
         </div>
       </section>
 
+      <section className="launchpad-panel" aria-label="Ruta recomendada del equipo seleccionado">
+        <div>
+          <span>Ruta recomendada</span>
+          <h2>{selected.practice.label}</h2>
+          <p>
+            Usa el equipo seleccionado como puente entre repaso, exploracion,
+            diagnostico y reporte tecnico.
+          </p>
+        </div>
+        <div className="launchpad-actions">
+          <a href={buildQuizUrl(selected)} target="_blank" rel="noreferrer">
+            <BookOpenCheck size={16} aria-hidden="true" />
+            Quiz
+          </a>
+          <a className="active" href="#equipos">
+            <Boxes size={16} aria-hidden="true" />
+            3D Lab
+          </a>
+          <a href={buildCaseUrl(selected)} target="_blank" rel="noreferrer">
+            <BrainCircuit size={16} aria-hidden="true" />
+            Caso
+          </a>
+          <a href={buildReportUrl(selected)} target="_blank" rel="noreferrer">
+            <FileText size={16} aria-hidden="true" />
+            Reporte
+          </a>
+        </div>
+      </section>
+
       <section className="workspace-grid" id="equipos">
         <aside className="library-panel" aria-label="Biblioteca de equipos">
           <div className="panel-heading">
