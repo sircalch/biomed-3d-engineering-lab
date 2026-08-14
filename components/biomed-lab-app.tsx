@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BookOpen,
+  BookOpenCheck,
   Boxes,
   BrainCircuit,
   CheckCircle2,
@@ -21,6 +22,7 @@ import {
   ListChecks,
   Maximize2,
   PanelRight,
+  Home,
   Rotate3D,
   Search,
   ShieldAlert,
@@ -269,6 +271,29 @@ export function BiomedLabApp() {
           />
         </label>
       </header>
+
+      <nav className="ecosystem-rail" aria-label="Modulos BioMedTools MX">
+        <a href={moduleLinks.core} target="_blank" rel="noreferrer">
+          <Home size={15} aria-hidden="true" />
+          Core
+        </a>
+        <a href={moduleLinks.quiz} target="_blank" rel="noreferrer">
+          <BookOpenCheck size={15} aria-hidden="true" />
+          Quiz
+        </a>
+        <a className="active" href="#equipos">
+          <Boxes size={15} aria-hidden="true" />
+          3D Lab
+        </a>
+        <a href={moduleLinks.case} target="_blank" rel="noreferrer">
+          <BrainCircuit size={15} aria-hidden="true" />
+          Casos
+        </a>
+        <a href={moduleLinks.report} target="_blank" rel="noreferrer">
+          <FileText size={15} aria-hidden="true" />
+          Reportes
+        </a>
+      </nav>
 
       <section className="app-hero" aria-labelledby="app-title">
         <div>

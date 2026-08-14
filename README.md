@@ -131,6 +131,8 @@ Flujo recomendado:
 BioMed 3D Lab -> Quiz Arena -> Case Simulator -> Report Builder
 ```
 
+La interfaz incluye una franja de ecosistema para cambiar entre Core, Quiz Arena, 3D Lab, Case Simulator y Report Builder.
+
 El laboratorio tambien acepta enlaces directos:
 
 ```text

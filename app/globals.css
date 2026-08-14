@@ -153,6 +153,45 @@ button {
   color: var(--blue-900);
 }
 
+.ecosystem-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  border: 1px solid rgba(219, 229, 241, 0.9);
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(13, 71, 161, 0.96), rgba(21, 101, 192, 0.94)),
+    #0d47a1;
+  box-shadow: var(--shadow-soft);
+  padding: 8px 10px;
+}
+
+.ecosystem-rail a {
+  display: inline-flex;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2f3ff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.ecosystem-rail a:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.ecosystem-rail a.active {
+  border-color: rgba(191, 219, 254, 0.95);
+  background: #fff;
+  color: #0b2d61;
+}
+
 .global-search,
 .category-filter {
   display: flex;
